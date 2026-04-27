@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TC Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --teal: #008A96;
+      --teal-dark: #005C64;
+      --gray-50: #FAFAFA;
+      --gray-100: #F4F4F5;
+      --gray-200: #E4E4E7;
+      --gray-300: #D4D4D8;
+      --gray-400: #A1A1AA;
+      --gray-500: #71717A;
+      --gray-600: #52525B;
+      --gray-700: #3F3F46;
+      --gray-800: #27272A;
+      --gray-900: #18181B;
+      --white: #fff;
+      --red: #EF4444;
+      --green: #10B981;
+      --orange: #F59E0B;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--gray-900); min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--teal-dark), var(--gray-900));
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 48px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+    .login-logo {
+      width: 56px; height: 56px;
+      background: var(--gray-900);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 18px; font-weight: 800; color: var(--white);
+    }
+    .login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-card p { color: var(--gray-500); font-size: 14px; margin-bottom: 32px; }
+    .login-input {
+      width: 100%; padding: 12px 16px;
+      border: 2px solid var(--gray-200); border-radius: var(--radius);
+      font-family: inherit; font-size: 15px;
+      outline: none; transition: border-color 0.2s;
+      margin-bottom: 12px;
+    }
+    .login-input:focus { border-color: var(--teal); }
+    .login-btn {
+      width: 100%; padding: 12px;
+      background: var(--gray-900); color: var(--white);
+      border: none; border-radius: var(--radius);
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .login-btn:hover { background: var(--teal); }
+    .login-error { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+
+    /* APP LAYOUT */
+    #app { display: none; min-height: 100vh; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+      background: var(--gray-900);
+      display: flex; flex-direction: column;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-logo-mark {
+      width: 40px; height: 40px;
+      background: var(--white);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: var(--gray-900);
+    }
+    .sidebar-logo-text { color: var(--white); font-size: 15px; font-weight: 700; }
+    .sidebar-logo-sub { color: var(--gray-500); font-size: 11px; font-weight: 500; }
+    .sidebar-nav { padding: 20px 12px; flex: 1; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 12px;
+      border: none; background: none;
+      color: var(--gray-400); font-family: inherit; font-size: 14px; font-weight: 500;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+      text-align: left; margin-bottom: 4px;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+    .nav-btn.active { background: rgba(0,138,150,0.2); color: var(--teal); }
+    .nav-btn svg { flex-shrink: 0; }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 12px;
+      border: none; background: none;
+      color: var(--gray-500); font-family: inherit; font-size: 13px;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .logout-btn:hover { color: var(--red); background: rgba(239,68,68,0.08); }
+
+    .main-content { margin-left: 240px; padding: 32px; }
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; }
+    .page-subtitle { color: var(--gray-500); font-size: 14px; margin-top: 2px; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 16px; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-primary { background: var(--gray-900); color: var(--white); }
+    .btn-primary:hover { background: var(--teal); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); }
+    .btn-danger:hover { background: var(--red); color: var(--white); }
+    .btn-ghost { background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-200); }
+    .btn-ghost:hover { border-color: var(--gray-400); }
+    .btn-sm { padding: 6px 11px; font-size: 12px; }
+    .btn-export { background: rgba(0,138,150,0.1); color: var(--teal); }
+    .btn-export:hover { background: var(--teal); color: var(--white); }
+
+    /* CARDS / STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .stat-value { font-size: 32px; font-weight: 800; color: var(--gray-900); }
+    .stat-label { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+
+    /* TABLE */
+    .table-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .table-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+      flex-wrap: wrap; gap: 12px;
+    }
+    .table-toolbar-left { display: flex; align-items: center; gap: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 12px 16px; text-align: left;
+      font-size: 12px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em;
+      background: var(--gray-50); border-bottom: 1px solid var(--gray-100);
+    }
+    td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+    .actions-cell { display: flex; gap: 6px; }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 99px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge-green { background: rgba(16,185,129,0.1); color: #059669; }
+    .badge-orange { background: rgba(245,158,11,0.1); color: #D97706; }
+    .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+    .badge-red { background: rgba(239,68,68,0.1); color: var(--red); }
+    .badge-teal { background: rgba(0,138,150,0.1); color: var(--teal); }
+
+    /* FILTER SELECT */
+    .filter-select {
+      padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: 8px;
+      font-family: inherit; font-size: 13px; color: var(--gray-700);
+      background: var(--white); cursor: pointer; outline: none;
+    }
+    .filter-select:focus { border-color: var(--teal); }
+
+    /* EMPTY STATE */
+    .empty-state { padding: 60px; text-align: center; color: var(--gray-400); }
+    .empty-state svg { margin: 0 auto 16px; }
+    .empty-state p { font-size: 15px; }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--white); border-radius: 16px;
+      width: 100%; max-width: 560px; max-height: 90vh;
+      overflow-y: auto; box-shadow: var(--shadow-md);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 28px; border-bottom: 1px solid var(--gray-100);
+      position: sticky; top: 0; background: var(--white); z-index: 1;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      border: none; background: var(--gray-100); border-radius: 8px;
+      cursor: pointer; color: var(--gray-600); transition: background 0.2s;
+    }
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-body { padding: 28px; }
+    .modal-footer {
+      padding: 20px 28px; border-top: 1px solid var(--gray-100);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* FORM */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+    .form-input, .form-textarea, .form-select-field {
+      padding: 10px 14px; border: 2px solid var(--gray-200); border-radius: 8px;
+      font-family: inherit; font-size: 14px; color: var(--gray-900);
+      transition: border-color 0.2s; outline: none;
+      background: var(--white);
+    }
+    .form-input:focus, .form-textarea:focus, .form-select-field:focus { border-color: var(--teal); }
+    .form-textarea { min-height: 90px; resize: vertical; }
+    .form-hint { font-size: 12px; color: var(--gray-400); }
+    .form-toggle { display: flex; align-items: center; gap: 10px; }
+    .form-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--teal); cursor: pointer; }
+    .form-toggle label { font-size: 14px; color: var(--gray-700); cursor: pointer; }
+    .form-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--gray-900); color: var(--white);
+      padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-md); z-index: 9999;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #059669; }
+    .toast.error { background: var(--red); }
+
+    /* CAPACITY BAR */
+    .capacity-bar { background: var(--gray-100); border-radius: 99px; height: 6px; margin-top: 4px; overflow: hidden; }
+    .capacity-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.3s; }
+    .capacity-fill.warn { background: var(--orange); }
+    .capacity-fill.full { background: var(--red); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .main-content { margin-left: 0; padding: 20px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">TC</div>
+    <h1>Teachers Connect</h1>
+    <p>Admin dashboard — enter your password to continue</p>
+    <form id="login-form">
+      <input type="password" id="password-input" class="login-input" placeholder="Admin password" autocomplete="current-password">
+      <button type="submit" class="login-btn">Sign in</button>
+      <p class="login-error" id="login-error">Incorrect password. Try again.</p>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">TC</div>
+      <div>
+        <div class="sidebar-logo-text">Teachers Connect</div>
+        <div class="sidebar-logo-sub">Admin Panel</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-tab="events">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Events
+      </button>
+      <button class="nav-btn" data-tab="tickets">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 9a3 3 0 010-6h20a3 3 0 010 6"/><path d="M2 15a3 3 0 000 6h20a3 3 0 000-6"/><path d="M6 9v6M10 9v6M14 9v6M18 9v6"/></svg>
+        Tickets
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logout-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- EVENTS TAB -->
+    <div id="tab-events" class="tab-content active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Events</div>
+          <div class="page-subtitle">Create and manage all events</div>
+        </div>
+        <button class="btn btn-primary" id="new-event-btn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Event
+        </button>
+      </div>
+      <div class="stats-row" id="events-stats"></div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <span style="font-size:14px;font-weight:600;color:var(--gray-700);">All Events</span>
+          </div>
+        </div>
+        <div id="events-table-wrapper">
+          <div class="empty-state"><p>Loading events...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKETS TAB -->
+    <div id="tab-tickets" class="tab-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Tickets</div>
+          <div class="page-subtitle">All ticket purchases</div>
+        </div>
+        <button class="btn btn-export" id="export-csv-btn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <select class="filter-select" id="ticket-event-filter">
+              <option value="">All Events</option>
+            </select>
+          </div>
+          <span id="ticket-count" style="font-size:13px;color:var(--gray-500);"></span>
+        </div>
+        <div id="tickets-table-wrapper">
+          <div class="empty-state"><p>Loading tickets...</p></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">New Event</h2>
+      <button class="modal-close" id="modal-close-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="event-form">
+      <div class="modal-body">
+        <input type="hidden" id="event-id">
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">Event Name *</label>
+            <input type="text" class="form-input" id="f-name" placeholder="e.g. End of Term Social" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date & Time *</label>
+            <input type="datetime-local" class="form-input" id="f-date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emoji</label>
+            <input type="text" class="form-input" id="f-emoji" placeholder="🎉" maxlength="2">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label class="form-label">Location *</label>
+            <input type="text" class="form-input" id="f-location" placeholder="e.g. The Clapham Grand, London" required>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="f-description" placeholder="Brief event description..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Price per ticket (£) *</label>
+            <input type="number" class="form-input" id="f-price" min="0.50" step="0.01" placeholder="15.00" required>
+            <span class="form-hint">Minimum £0.50</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Capacity *</label>
+            <input type="number" class="form-input" id="f-capacity" min="1" placeholder="100" required>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <div class="form-toggle">
+              <input type="checkbox" id="f-active" checked>
+              <label for="f-active">Active (visible and purchasable on website)</label>
+            </div>
+          </div>
+        </div>
+        <p class="form-error" id="event-form-error"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="modal-save-btn">Create Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '/.netlify/functions';
+  let adminPassword = '';
+  let allEvents = [];
+  let allTickets = [];
+
+  // ── AUTH ──────────────────────────────────────────────────────────────────
+
+  function getStoredPassword() {
+    return sessionStorage.getItem('tc_admin_pw') || '';
+  }
+
+  function init() {
+    const stored = getStoredPassword();
+    if (stored) {
+      adminPassword = stored;
+      showApp();
+    }
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById('password-input').value;
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
+
+    // Verify by making an authenticated request
+    const res = await fetch(`${API}/admin-get-events`, {
+      headers: { 'x-admin-password': pw }
+    });
+
+    if (res.ok) {
+      adminPassword = pw;
+      sessionStorage.setItem('tc_admin_pw', pw);
+      const data = await res.json();
+      allEvents = data;
+      showApp();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('password-input').value = '';
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem('tc_admin_pw');
+    location.reload();
+  });
+
+  function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadEvents();
+    loadTickets();
+  }
+
+  // ── API HELPERS ───────────────────────────────────────────────────────────
+
+  function authHeaders(extra = {}) {
+    return { 'Content-Type': 'application/json', 'x-admin-password': adminPassword, ...extra };
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(`${API}${path}`, {
+      ...opts,
+      headers: authHeaders(opts.headers || {}),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Request failed');
+    }
+    return res.json();
+  }
+
+  // ── TABS ─────────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // ── EVENTS ───────────────────────────────────────────────────────────────
+
+  async function loadEvents() {
+    try {
+      allEvents = await apiFetch('/admin-get-events');
+      renderEventsStats();
+      renderEventsTable();
+      populateEventFilter();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function renderEventsStats() {
+    const total = allEvents.length;
+    const active = allEvents.filter(e => e.active).length;
+    const totalSold = allEvents.reduce((s, e) => s + e.tickets_sold, 0);
+    const revenue = allEvents.reduce((s, e) => s + (e.tickets_sold * e.price), 0);
+
+    document.getElementById('events-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Events</div></div>
+      <div class="stat-card"><div class="stat-value">${active}</div><div class="stat-label">Active Events</div></div>
+      <div class="stat-card"><div class="stat-value">${totalSold}</div><div class="stat-label">Tickets Sold</div></div>
+      <div class="stat-card"><div class="stat-value">£${(revenue / 100).toFixed(0)}</div><div class="stat-label">Total Revenue</div></div>
+    `;
+  }
+
+  function renderEventsTable() {
+    const wrapper = document.getElementById('events-table-wrapper');
+    if (!allEvents.length) {
+      wrapper.innerHTML = '<div class="empty-state"><p>No events yet. Create your first event above.</p></div>';
+      return;
+    }
+
+    const rows = allEvents.map(ev => {
+      const date = new Date(ev.date);
+      const pct = ev.capacity > 0 ? (ev.tickets_sold / ev.capacity) * 100 : 0;
+      const fillClass = pct >= 100 ? 'full' : pct >= 80 ? 'warn' : '';
+      const statusBadge = ev.active
+        ? '<span class="badge badge-teal">Active</span>'
+        : '<span class="badge badge-gray">Inactive</span>';
+
+      return `
+        <tr>
+          <td>
+            <span style="font-size:20px;margin-right:8px;">${ev.image_emoji || '🎉'}</span>
+            <strong>${esc(ev.name)}</strong>
+          </td>
+          <td>${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}<br>
+              <span style="color:var(--gray-400);font-size:12px;">${date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}</span>
+          </td>
+          <td style="color:var(--gray-600);">${esc(ev.location)}</td>
+          <td style="font-weight:600;">£${(ev.price / 100).toFixed(2)}</td>
+          <td>
+            <span style="font-size:13px;">${ev.tickets_sold} / ${ev.capacity}</span>
+            <div class="capacity-bar"><div class="capacity-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
+          </td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn btn-ghost btn-sm" onclick="openEditModal('${ev.id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteEvent('${ev.id}', '${esc(ev.name)}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    wrapper.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th><th>Date</th><th>Location</th><th>Price</th><th>Capacity</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  document.getElementById('new-event-btn').addEventListener('click', () => openCreateModal());
+
+  function openCreateModal() {
+    document.getElementById('modal-title').textContent = 'New Event';
+    document.getElementById('modal-save-btn').textContent = 'Create Event';
+    document.getElementById('event-id').value = '';
+    document.getElementById('event-form').reset();
+    document.getElementById('f-active').checked = true;
+    document.getElementById('event-form-error').style.display = 'none';
+    document.getElementById('event-modal').classList.add('open');
+  }
+
+  function openEditModal(id) {
+    const ev = allEvents.find(e => e.id === id);
+    if (!ev) return;
+
+    document.getElementById('modal-title').textContent = 'Edit Event';
+    document.getElementById('modal-save-btn').textContent = 'Save Changes';
+    document.getElementById('event-id').value = ev.id;
+    document.getElementById('f-name').value = ev.name;
+    // Convert UTC date to local datetime-local format
+    const d = new Date(ev.date);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    document.getElementById('f-date').value = local;
+    document.getElementById('f-emoji').value = ev.image_emoji || '🎉';
+    document.getElementById('f-location').value = ev.location;
+    document.getElementById('f-description').value = ev.description || '';
+    document.getElementById('f-price').value = (ev.price / 100).toFixed(2);
+    document.getElementById('f-capacity').value = ev.capacity;
+    document.getElementById('f-active').checked = ev.active;
+    document.getElementById('event-form-error').style.display = 'none';
+    document.getElementById('event-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('event-modal').classList.remove('open');
+  }
+
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+  document.getElementById('event-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.getElementById('event-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('event-form-error');
+    errEl.style.display = 'none';
+    const saveBtn = document.getElementById('modal-save-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    const id = document.getElementById('event-id').value;
+    const payload = {
+      name: document.getElementById('f-name').value.trim(),
+      date: new Date(document.getElementById('f-date').value).toISOString(),
+      image_emoji: document.getElementById('f-emoji').value.trim() || '🎉',
+      location: document.getElementById('f-location').value.trim(),
+      description: document.getElementById('f-description').value.trim(),
+      price: document.getElementById('f-price').value,
+      capacity: document.getElementById('f-capacity').value,
+      active: document.getElementById('f-active').checked,
+    };
+
+    try {
+      if (id) {
+        await apiFetch('/admin-update-event', { method: 'PUT', body: JSON.stringify({ id, ...payload }) });
+        toast('Event updated', 'success');
+      } else {
+        await apiFetch('/admin-create-event', { method: 'POST', body: JSON.stringify(payload) });
+        toast('Event created', 'success');
+      }
+      closeModal();
+      loadEvents();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.style.display = 'block';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = id ? 'Save Changes' : 'Create Event';
+    }
+  });
+
+  async function deleteEvent(id, name) {
+    if (!confirm(`Delete "${name}"? This will also delete all associated ticket records.`)) return;
+    try {
+      await apiFetch('/admin-delete-event', { method: 'DELETE', body: JSON.stringify({ id }) });
+      toast('Event deleted', 'success');
+      loadEvents();
+      loadTickets();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // ── TICKETS ───────────────────────────────────────────────────────────────
+
+  async function loadTickets(eventId = '') {
+    try {
+      const qs = eventId ? `?event_id=${eventId}` : '';
+      allTickets = await apiFetch(`/admin-get-tickets${qs}`);
+      renderTicketsTable();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function renderTicketsTable() {
+    const wrapper = document.getElementById('tickets-table-wrapper');
+    const count = document.getElementById('ticket-count');
+    const paid = allTickets.filter(t => t.status === 'paid');
+    count.textContent = `${paid.length} paid / ${allTickets.length} total`;
+
+    if (!allTickets.length) {
+      wrapper.innerHTML = '<div class="empty-state"><p>No tickets yet.</p></div>';
+      return;
+    }
+
+    const rows = allTickets.map(t => {
+      const statusBadge = {
+        paid: '<span class="badge badge-green">Paid</span>',
+        pending: '<span class="badge badge-orange">Pending</span>',
+        refunded: '<span class="badge badge-red">Refunded</span>',
+      }[t.status] || `<span class="badge badge-gray">${t.status}</span>`;
+
+      const eventName = t.events?.name || '—';
+      const date = new Date(t.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+
+      return `
+        <tr>
+          <td><strong>${esc(t.buyer_name)}</strong></td>
+          <td style="color:var(--gray-600);">${esc(t.buyer_email)}</td>
+          <td style="color:var(--gray-600);">${esc(t.buyer_phone)}</td>
+          <td>${esc(eventName)}</td>
+          <td style="text-align:center;font-weight:600;">${t.quantity}</td>
+          <td style="font-weight:600;">£${(t.amount_paid / 100).toFixed(2)}</td>
+          <td>${statusBadge}</td>
+          <td style="color:var(--gray-500);font-size:13px;">${date}</td>
+        </tr>
+      `;
+    }).join('');
+
+    wrapper.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Email</th><th>Phone</th><th>Event</th><th style="text-align:center;">Qty</th><th>Amount</th><th>Status</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function populateEventFilter() {
+    const select = document.getElementById('ticket-event-filter');
+    const current = select.value;
+    select.innerHTML = '<option value="">All Events</option>';
+    allEvents.forEach(ev => {
+      const opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.name;
+      select.appendChild(opt);
+    });
+    select.value = current;
+  }
+
+  document.getElementById('ticket-event-filter').addEventListener('change', (e) => {
+    loadTickets(e.target.value);
+  });
+
+  document.getElementById('export-csv-btn').addEventListener('click', () => {
+    if (!allTickets.length) { toast('No tickets to export', 'error'); return; }
+
+    const headers = ['Name', 'Email', 'Phone', 'Event', 'Quantity', 'Amount (£)', 'Status', 'Date'];
+    const rows = allTickets.map(t => [
+      t.buyer_name,
+      t.buyer_email,
+      t.buyer_phone,
+      t.events?.name || '',
+      t.quantity,
+      (t.amount_paid / 100).toFixed(2),
+      t.status,
+      new Date(t.created_at).toLocaleDateString('en-GB'),
+    ]);
+
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tickets-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  });
+
+  // ── UTILS ─────────────────────────────────────────────────────────────────
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let toastTimer;
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast${type ? ' ' + type : ''} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── BOOT ──────────────────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>
