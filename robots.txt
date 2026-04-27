@@ -1,0 +1,13 @@
+# Teachers Connect - Robots.txt
+# This file tells search engines how to crawl the site
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemap location
+Sitemap: https://teachersconnect.com/sitemap.xml
+
+# Crawl-delay (be nice to servers)
+Crawl-delay: 1
