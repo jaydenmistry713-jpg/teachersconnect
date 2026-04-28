@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
-  const { name, date, location, description, price, capacity, image_emoji, active } = JSON.parse(event.body);
+  const { name, date, location, description, price, capacity, image_url, active, show_availability } = JSON.parse(event.body);
 
   if (!name || !date || !location || !price || !capacity) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
@@ -30,10 +30,11 @@ exports.handler = async (event) => {
       date,
       location,
       description: description || null,
-      price: Math.round(parseFloat(price) * 100), // convert £ to pence
+      price: Math.round(parseFloat(price) * 100),
       capacity: parseInt(capacity, 10),
-      image_emoji: image_emoji || '🎉',
+      image_url: image_url || null,
       active: active !== false,
+      show_availability: show_availability !== false,
     })
     .select()
     .single();

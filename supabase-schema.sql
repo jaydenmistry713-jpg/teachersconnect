@@ -35,3 +35,13 @@ $$ LANGUAGE sql;
 
 -- Allow public read of active events (used by get-events function with service key anyway)
 -- Row-level security is optional since all DB access goes through Netlify functions using the service key
+
+-- ── Run these ALTER statements to add columns added after initial schema ──────
+
+ALTER TABLE events ADD COLUMN IF NOT EXISTS show_availability BOOLEAN DEFAULT true;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+-- ── Supabase Storage setup (one-time, in the dashboard) ──────────────────────
+-- 1. Go to Storage in the Supabase dashboard
+-- 2. Create a new bucket named exactly: event-images
+-- 3. Toggle it to Public so uploaded images are accessible without a signed URL

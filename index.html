@@ -731,7 +731,7 @@
         .includes-item { font-size: 14px; color: var(--gray-700); }
         .featured-actions { display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap; }
         .featured-note { font-size: 14px; font-weight: 600; color: var(--accent-rose); }
-        .events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-xl); }
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 380px)); gap: var(--space-xl); justify-content: center; }
         .event-card { position: relative; border-radius: var(--radius-xl); overflow: hidden; cursor: pointer; }
         .event-card-inner {
             background: var(--white);
@@ -940,7 +940,7 @@
             .hero-stats { justify-content: center; }
             .hero-right { display: none; }
             .featured-card { grid-template-columns: 1fr; }
-            .events-grid { grid-template-columns: 1fr; }
+            .events-grid { grid-template-columns: 1fr; justify-content: stretch; }
         }
                 
         @media (max-width: 768px) {
@@ -2147,12 +2147,22 @@
             var price = '£' + (ev.price / 100).toFixed(2);
             var btnLabel = soldOut ? 'Sold Out' : 'Buy Tickets — ' + price;
 
+            var imageHtml = ev.image_url
+                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">'
+                : '<div class="card-image-bg" style="position:absolute;inset:0;background:linear-gradient(135deg,var(--primary-500),var(--primary-700));"></div>';
+
+            var availBadge = '';
+            if (ev.show_availability !== false) {
+                if (remaining > 0 && remaining <= 20) {
+                    availBadge = '<span class="card-status" style="background:#FEF3C7;color:#D97706;">' + remaining + ' left</span>';
+                } else if (soldOut) {
+                    availBadge = '<span class="card-status" style="background:var(--gray-100);color:var(--gray-500);">Sold out</span>';
+                }
+            }
+
             return '<div class="event-card" data-animate="fade-up">' +
                 '<div class="event-card-inner">' +
-                    '<div class="event-card-image">' +
-                        '<div class="card-image-bg" style="position:absolute;inset:0;background:linear-gradient(135deg,var(--primary-500),var(--primary-700));"></div>' +
-                        '<div class="card-emoji" style="font-size:56px;position:relative;z-index:1;">' + (ev.image_emoji || '🎉') + '</div>' +
-                    '</div>' +
+                    '<div class="event-card-image">' + imageHtml + '</div>' +
                     '<div class="event-card-content">' +
                         '<div class="card-date">' +
                             '<span class="date-num">' + date.day + '</span>' +
@@ -2162,10 +2172,7 @@
                         '<div class="card-excerpt">' + escHtml(ev.description || ev.location) + '</div>' +
                         '<div class="card-footer">' +
                             '<span class="card-location">' + escHtml(ev.location) + '</span>' +
-                            (remaining > 0 && remaining <= 20
-                                ? '<span class="card-status" style="background:#FEF3C7;color:#D97706;">' + remaining + ' left</span>'
-                                : (soldOut ? '<span class="card-status" style="background:var(--gray-100);color:var(--gray-500);">Sold out</span>' : '')
-                            ) +
+                            availBadge +
                         '</div>' +
                         '<button class="btn-buy-ticket" ' + (soldOut ? 'disabled' : '') +
                             ' onclick="openCheckout(\'' + ev.id + '\')">' + btnLabel + '</button>' +
@@ -2183,7 +2190,7 @@
                     '</div>';
                 return;
             }
-            var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-xl);">';
+            var grid = '<div class="events-grid">';
             events.forEach(function(ev) { grid += renderEventCard(ev); });
             grid += '</div>';
             container.innerHTML = grid;

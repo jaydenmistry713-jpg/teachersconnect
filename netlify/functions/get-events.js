@@ -8,7 +8,7 @@ const supabase = createClient(
 exports.handler = async () => {
   const { data, error } = await supabase
     .from('events')
-    .select('id, name, date, location, description, price, capacity, tickets_sold, image_emoji, active')
+    .select('id, name, date, location, description, price, capacity, tickets_sold, image_url, active, show_availability')
     .eq('active', true)
     .order('date', { ascending: true });
 

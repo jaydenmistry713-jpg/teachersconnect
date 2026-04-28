@@ -398,8 +398,16 @@
             <input type="datetime-local" class="form-input" id="f-date" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Emoji</label>
-            <input type="text" class="form-input" id="f-emoji" placeholder="🎉" maxlength="2">
+            <label class="form-label">Event Image</label>
+            <input type="file" class="form-input" id="f-image" accept="image/jpeg,image/png,image/webp,image/gif" style="padding:8px;cursor:pointer;">
+            <div id="f-image-preview" style="margin-top:8px;display:none;">
+              <img id="f-image-preview-img" style="width:100%;height:90px;object-fit:cover;border-radius:6px;display:block;">
+              <span style="font-size:11px;color:var(--gray-400);">New image selected</span>
+            </div>
+            <div id="f-image-current" style="margin-top:8px;display:none;">
+              <img id="f-image-current-img" style="width:100%;height:90px;object-fit:cover;border-radius:6px;display:block;">
+              <span style="font-size:11px;color:var(--gray-400);">Current image — select a file above to replace</span>
+            </div>
           </div>
         </div>
         <div class="form-row single">
@@ -430,6 +438,10 @@
             <div class="form-toggle">
               <input type="checkbox" id="f-active" checked>
               <label for="f-active">Active (visible and purchasable on website)</label>
+            </div>
+            <div class="form-toggle" style="margin-top:10px;">
+              <input type="checkbox" id="f-show-availability" checked>
+              <label for="f-show-availability">Show live ticket availability (e.g. "3 left")</label>
             </div>
           </div>
         </div>
@@ -575,7 +587,10 @@
       return `
         <tr>
           <td>
-            <span style="font-size:20px;margin-right:8px;">${ev.image_emoji || '🎉'}</span>
+            ${ev.image_url
+              ? `<img src="${esc(ev.image_url)}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:8px;">`
+              : `<span style="display:inline-block;width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#008A96,#005C64);vertical-align:middle;margin-right:8px;"></span>`
+            }
             <strong>${esc(ev.name)}</strong>
           </td>
           <td>${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}<br>
@@ -618,6 +633,9 @@
     document.getElementById('event-id').value = '';
     document.getElementById('event-form').reset();
     document.getElementById('f-active').checked = true;
+    document.getElementById('f-show-availability').checked = true;
+    document.getElementById('f-image-preview').style.display = 'none';
+    document.getElementById('f-image-current').style.display = 'none';
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('event-modal').classList.add('open');
   }
@@ -634,12 +652,20 @@
     const d = new Date(ev.date);
     const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     document.getElementById('f-date').value = local;
-    document.getElementById('f-emoji').value = ev.image_emoji || '🎉';
     document.getElementById('f-location').value = ev.location;
     document.getElementById('f-description').value = ev.description || '';
     document.getElementById('f-price').value = (ev.price / 100).toFixed(2);
     document.getElementById('f-capacity').value = ev.capacity;
     document.getElementById('f-active').checked = ev.active;
+    document.getElementById('f-show-availability').checked = ev.show_availability !== false;
+    document.getElementById('f-image').value = '';
+    document.getElementById('f-image-preview').style.display = 'none';
+    if (ev.image_url) {
+      document.getElementById('f-image-current-img').src = ev.image_url;
+      document.getElementById('f-image-current').style.display = 'block';
+    } else {
+      document.getElementById('f-image-current').style.display = 'none';
+    }
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('event-modal').classList.add('open');
   }
@@ -647,6 +673,21 @@
   function closeModal() {
     document.getElementById('event-modal').classList.remove('open');
   }
+
+  document.getElementById('f-image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('f-image-preview-img').src = e.target.result;
+        document.getElementById('f-image-preview').style.display = 'block';
+        document.getElementById('f-image-current').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      document.getElementById('f-image-preview').style.display = 'none';
+    }
+  });
 
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
@@ -663,15 +704,38 @@
     saveBtn.textContent = 'Saving...';
 
     const id = document.getElementById('event-id').value;
+
+    // Upload image first if a new file was selected
+    let image_url = null;
+    const imageFile = document.getElementById('f-image').files[0];
+    if (imageFile) {
+      saveBtn.textContent = 'Uploading image...';
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(imageFile);
+      });
+      const uploaded = await apiFetch('/admin-upload-image', {
+        method: 'POST',
+        body: JSON.stringify({ image: base64, filename: imageFile.name, mimeType: imageFile.type }),
+      });
+      image_url = uploaded.url;
+    } else if (id) {
+      const existing = allEvents.find(e => e.id === id);
+      image_url = existing ? existing.image_url || null : null;
+    }
+
     const payload = {
       name: document.getElementById('f-name').value.trim(),
       date: new Date(document.getElementById('f-date').value).toISOString(),
-      image_emoji: document.getElementById('f-emoji').value.trim() || '🎉',
+      image_url,
       location: document.getElementById('f-location').value.trim(),
       description: document.getElementById('f-description').value.trim(),
       price: document.getElementById('f-price').value,
       capacity: document.getElementById('f-capacity').value,
       active: document.getElementById('f-active').checked,
+      show_availability: document.getElementById('f-show-availability').checked,
     };
 
     try {
