@@ -41,6 +41,8 @@ Deployment is automatic on push to `main` via Netlify CI. No build step for the 
 - `Playfair Display` — italic accent text (`var(--font-accent)`)
 - `Syne` — display headings on `index.html`, `about.html`, `gallery.html` (not used on `contact.html`/`faq.html`)
 
+**Footer credit**: all five pages include "Website Created by [Mistuzzo](https://mistuzzo.com)" in the footer bottom bar.
+
 ### Backend — Netlify Functions (`netlify/functions/`)
 
 All functions use CommonJS (`require`/`module.exports`) and are bundled with esbuild. Dependencies are declared in `package.json`.
@@ -55,18 +57,27 @@ All functions use CommonJS (`require`/`module.exports`) and are bundled with esb
 | `admin-update-event` | PUT | Admin password | Update event |
 | `admin-delete-event` | DELETE | Admin password | Delete event |
 | `admin-get-tickets` | GET | Admin password | All ticket purchases, filterable by event |
+| `admin-upload-image` | POST | Admin password | Upload event image to Supabase Storage, return public URL |
 
 Admin functions are protected by checking `event.headers['x-admin-password'] === process.env.ADMIN_PASSWORD`.
 
 ### Database — Supabase (PostgreSQL)
 
 Two tables (see `supabase-schema.sql`):
-- `events` — id, name, date, location, description, price (pence), capacity, tickets_sold, image_emoji, active, created_at
+- `events` — id, name, date, location, description, price (pence), capacity, tickets_sold, image_url, show_availability, active, created_at
 - `tickets` — id, event_id, buyer_name, buyer_email, buyer_phone, quantity, stripe_payment_intent_id, amount_paid (pence), status (pending/paid/refunded), created_at
 
 **Prices are always stored in pence (integers).** Divide by 100 for display; multiply by 100 when writing. The admin panel converts automatically.
 
+**`image_url`** (TEXT, nullable) — public URL of the event's uploaded image, stored in Supabase Storage bucket `event-images`. If null, event cards show a teal gradient placeholder. The old `image_emoji` column still exists in the DB but is no longer used by the UI.
+
+**`show_availability`** (BOOLEAN, default true) — controls whether the "X left" / "Sold out" badge is shown on the public event card. Toggled per-event in the admin panel. Always visible in the admin panel regardless of this setting.
+
 A Supabase RPC function `increment_tickets_sold(event_id_param, qty_param)` is used in the webhook to atomically increment `tickets_sold` after a successful payment.
+
+### Supabase Storage
+
+Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-image` function using the service key. The function converts a base64-encoded image sent from the admin browser into a Buffer and uploads it with a timestamped random filename. The public URL is then stored in `events.image_url`.
 
 ### Ticket purchase flow
 
@@ -81,8 +92,25 @@ A Supabase RPC function `increment_tickets_sold(event_id_param, qty_param)` is u
 ### Admin panel — `/admin/index.html`
 
 Single-page admin app. Password stored in `sessionStorage` after login and sent as `x-admin-password` header on every API call. Two tabs:
-- **Events** — stats row, create/edit/delete events via modal form
+- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload (file picker with preview), location, description, price, capacity, active toggle, show-availability toggle.
 - **Tickets** — filterable by event, CSV export
+
+**Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved. When editing, the current image is shown; selecting a new file replaces it.
+
+### Events grid — `index.html`
+
+Event cards are rendered dynamically by JS into `#events-grid-container`. The grid uses `.events-grid` CSS class:
+- `grid-template-columns: repeat(auto-fit, minmax(300px, 380px))` with `justify-content: center`
+- Single or two events appear centred on desktop rather than left-aligned
+- Below 1024px the grid collapses to a single column
+
+### Netlify Forms
+
+Two forms are registered with Netlify:
+- **`newsletter`** — mailing list signup on `index.html`
+- **`contact`** — inquiry form on `contact.html`
+
+Both use `data-netlify="true"`, a `name` attribute, and a `<input type="hidden" name="form-name">` field. Submissions are POSTed to `/` via `fetch` with `Content-Type: application/x-www-form-urlencoded`. Email notifications for form submissions are configured in the Netlify dashboard under Forms → Notifications.
 
 ### Email — Resend
 
@@ -117,7 +145,7 @@ All frontend JS is vanilla, no libraries (except Stripe.js loaded from CDN). Rec
 
 ## Images
 
-Event photos are stored as `.webp` files (`edwin01.webp` – `edwin06.webp`) and used in `gallery.html`. Favicons exist in multiple formats (`.ico`, 16×16, 32×32, 192×192, 512×512 PNG, Apple touch icon) and a PWA manifest (`site.webmanifest`) is present.
+Event images are uploaded via the admin panel and stored in Supabase Storage (`event-images` bucket). Gallery photos are stored as `.webp` files (`edwin01.webp` – `edwin06.webp`) and used in `gallery.html`. Favicons exist in multiple formats (`.ico`, 16×16, 32×32, 192×192, 512×512 PNG, Apple touch icon) and a PWA manifest (`site.webmanifest`) is present.
 
 ## SEO / crawl files
 
