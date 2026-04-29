@@ -605,6 +605,7 @@
           <td>${statusBadge}</td>
           <td>
             <div class="actions-cell">
+              <button class="btn btn-export btn-sm" onclick="downloadGuestList('${ev.id}', '${esc(ev.name)}')">Guest List</button>
               <button class="btn btn-ghost btn-sm" onclick="openEditModal('${ev.id}')">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deleteEvent('${ev.id}', '${esc(ev.name)}')">Delete</button>
             </div>
@@ -867,6 +868,30 @@
     a.download = `tickets-${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
   });
+
+  // ── GUEST LIST ────────────────────────────────────────────────────────────
+
+  async function downloadGuestList(eventId, eventName) {
+    try {
+      const tickets = await apiFetch(`/admin-get-tickets?event_id=${eventId}`);
+      const paid = tickets.filter(t => t.status === 'paid');
+      if (!paid.length) { toast('No paid tickets for this event', 'error'); return; }
+
+      const headers = ['Name', 'Email', 'Phone', 'Tickets'];
+      const rows = paid.map(t => [t.buyer_name, t.buyer_email, t.buyer_phone, t.quantity]);
+      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+      const safeName = eventName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `guestlist-${safeName}.csv`;
+      a.click();
+      toast(`Downloaded ${paid.length} guests`, 'success');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
 
