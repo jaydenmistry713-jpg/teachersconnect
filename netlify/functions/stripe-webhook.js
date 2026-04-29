@@ -67,6 +67,57 @@ exports.handler = async (event) => {
 
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
+    to: 'mistuzzo.marketing@outlook.com',
+    subject: `New ticket sale: ${event_name}`,
+    html: `
+      <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#FAFAF9;">
+        <div style="background:linear-gradient(135deg,#008A96,#005C64);border-radius:16px;padding:32px;margin-bottom:32px;">
+          <h1 style="color:white;font-size:24px;margin:0 0 8px;font-weight:800;">New Ticket Sale</h1>
+          <p style="color:rgba(255,255,255,0.9);margin:0;font-size:15px;">${event_name}</p>
+        </div>
+
+        <div style="background:white;border-radius:12px;padding:32px;border:1px solid #E4E4E7;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;color:#71717A;font-size:14px;width:130px;">Buyer</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${buyer_name}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Email</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${buyer_email}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Phone</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${buyer_phone}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Event</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${event_name}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Date</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${eventDate}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Tickets</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${qty}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Amount</td>
+              <td style="padding:10px 0;color:#008A96;font-weight:700;font-size:18px;">£${(amount / 100).toFixed(2)}</td>
+            </tr>
+            <tr style="border-top:1px solid #F4F4F5;">
+              <td style="padding:10px 0;color:#71717A;font-size:14px;">Booking ref</td>
+              <td style="padding:10px 0;color:#18181B;font-weight:700;font-size:14px;font-family:monospace;">${bookingRef}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    `,
+  });
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
     to: buyer_email,
     subject: `Your ticket for ${event_name} 🎉`,
     html: `
