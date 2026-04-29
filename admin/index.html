@@ -266,10 +266,81 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* MOBILE NAV */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: var(--gray-900);
+      z-index: 100;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .mobile-nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      background: none;
+      color: var(--gray-500);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .mobile-nav-btn.active { color: var(--teal); }
+
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
-      .main-content { margin-left: 0; padding: 20px; }
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; }
+      .main-content { margin-left: 0; padding: 16px; padding-bottom: 84px; }
       .form-row { grid-template-columns: 1fr; }
+      .page-header { flex-wrap: wrap; gap: 12px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+
+      /* Table → card layout */
+      .table-card table { display: block; }
+      .table-card thead { display: none; }
+      .table-card tbody { display: block; }
+      .table-card tbody tr {
+        display: block;
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow);
+        background: var(--white);
+      }
+      .table-card tbody tr:hover td { background: transparent; }
+      .table-card tbody td {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 14px;
+        gap: 10px;
+        min-height: 34px;
+      }
+      .table-card tbody td:last-child { border-bottom: none; padding-top: 10px; }
+      .table-card tbody td::before {
+        content: attr(data-label);
+        color: var(--gray-400);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        min-width: 80px;
+        flex-shrink: 0;
+      }
+      .table-card tbody td[data-label=""]::before { display: none; min-width: 0; }
+      .actions-cell { flex-wrap: wrap; gap: 8px; }
+      .table-toolbar { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -458,6 +529,18 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <button class="mobile-nav-btn active" data-tab="events">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Events
+  </button>
+  <button class="mobile-nav-btn" data-tab="tickets">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 9a3 3 0 010-6h20a3 3 0 010 6"/><path d="M2 15a3 3 0 000 6h20a3 3 0 000-6"/><path d="M6 9v6M10 9v6M14 9v6M18 9v6"/></svg>
+    Tickets
+  </button>
+</div>
+
 <script>
   const API = '/.netlify/functions';
   let adminPassword = '';
@@ -533,13 +616,19 @@
 
   // ── TABS ─────────────────────────────────────────────────────────────────
 
+  function switchTab(tabName) {
+    document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+  }
+
   document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    });
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
   // ── EVENTS ───────────────────────────────────────────────────────────────
@@ -586,24 +675,24 @@
 
       return `
         <tr>
-          <td>
+          <td data-label="">
             ${ev.image_url
               ? `<img src="${esc(ev.image_url)}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:8px;">`
-              : `<span style="display:inline-block;width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#008A96,#005C64);vertical-align:middle;margin-right:8px;"></span>`
+              : `<span style="display:inline-block;width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#008A96,#005C64);vertical-align:middle;margin-right:8px;flex-shrink:0;"></span>`
             }
             <strong>${esc(ev.name)}</strong>
           </td>
-          <td>${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}<br>
-              <span style="color:var(--gray-400);font-size:12px;">${date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}</span>
+          <td data-label="Date">${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })} <span style="color:var(--gray-400);font-size:12px;">${date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}</span></td>
+          <td data-label="Location" style="color:var(--gray-600);">${esc(ev.location)}</td>
+          <td data-label="Price" style="font-weight:600;">£${(ev.price / 100).toFixed(2)}</td>
+          <td data-label="Capacity">
+            <div style="flex:1;">
+              <span style="font-size:13px;">${ev.tickets_sold} / ${ev.capacity}</span>
+              <div class="capacity-bar"><div class="capacity-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
+            </div>
           </td>
-          <td style="color:var(--gray-600);">${esc(ev.location)}</td>
-          <td style="font-weight:600;">£${(ev.price / 100).toFixed(2)}</td>
-          <td>
-            <span style="font-size:13px;">${ev.tickets_sold} / ${ev.capacity}</span>
-            <div class="capacity-bar"><div class="capacity-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
-          </td>
-          <td>${statusBadge}</td>
-          <td>
+          <td data-label="Status">${statusBadge}</td>
+          <td data-label="">
             <div class="actions-cell">
               <button class="btn btn-export btn-sm" onclick="downloadGuestList('${ev.id}', '${esc(ev.name)}')">Guest List</button>
               <button class="btn btn-ghost btn-sm" onclick="openEditModal('${ev.id}')">Edit</button>
@@ -805,14 +894,14 @@
 
       return `
         <tr>
-          <td><strong>${esc(t.buyer_name)}</strong></td>
-          <td style="color:var(--gray-600);">${esc(t.buyer_email)}</td>
-          <td style="color:var(--gray-600);">${esc(t.buyer_phone)}</td>
-          <td>${esc(eventName)}</td>
-          <td style="text-align:center;font-weight:600;">${t.quantity}</td>
-          <td style="font-weight:600;">£${(t.amount_paid / 100).toFixed(2)}</td>
-          <td>${statusBadge}</td>
-          <td style="color:var(--gray-500);font-size:13px;">${date}</td>
+          <td data-label=""><strong>${esc(t.buyer_name)}</strong></td>
+          <td data-label="Email" style="color:var(--gray-600);">${esc(t.buyer_email)}</td>
+          <td data-label="Phone" style="color:var(--gray-600);">${esc(t.buyer_phone)}</td>
+          <td data-label="Event">${esc(eventName)}</td>
+          <td data-label="Tickets" style="font-weight:600;">${t.quantity}</td>
+          <td data-label="Amount" style="font-weight:600;">£${(t.amount_paid / 100).toFixed(2)}</td>
+          <td data-label="Status">${statusBadge}</td>
+          <td data-label="Date" style="color:var(--gray-500);font-size:13px;">${date}</td>
         </tr>
       `;
     }).join('');
