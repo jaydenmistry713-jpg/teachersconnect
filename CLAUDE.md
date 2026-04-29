@@ -51,7 +51,7 @@ All functions use CommonJS (`require`/`module.exports`) and are bundled with esb
 |---|---|---|---|
 | `get-events` | GET | Public | Fetch active events → homepage |
 | `create-payment-intent` | POST | Public | Create Stripe PaymentIntent, save pending ticket |
-| `stripe-webhook` | POST | Stripe signature | Mark ticket paid, send confirmation email |
+| `stripe-webhook` | POST | Stripe signature | Mark ticket paid, send confirmation emails (buyer + owner) |
 | `admin-get-events` | GET | Admin password | All events for admin panel |
 | `admin-create-event` | POST | Admin password | Create event |
 | `admin-update-event` | PUT | Admin password | Update event |
@@ -86,16 +86,18 @@ Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-
 3. Step 1: name, email, phone, quantity → POST to `create-payment-intent` → returns Stripe `client_secret`
 4. Step 2: Stripe Payment Element mounts using `client_secret` → user pays
 5. `stripe.confirmPayment()` called with `redirect: 'if_required'` to keep payment on-page
-6. Stripe fires `payment_intent.succeeded` webhook → `stripe-webhook` function marks ticket paid, increments `tickets_sold`, sends confirmation email via Resend
+6. Stripe fires `payment_intent.succeeded` webhook → `stripe-webhook` function marks ticket paid, increments `tickets_sold`, sends two emails via Resend: (a) buyer confirmation with event details and booking ref, (b) owner notification with full buyer info
 7. Step 3: success screen shown to user
 
 ### Admin panel — `/admin/index.html`
 
 Single-page admin app. Password stored in `sessionStorage` after login and sent as `x-admin-password` header on every API call. Two tabs:
-- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload (file picker with preview), location, description, price, capacity, active toggle, show-availability toggle.
-- **Tickets** — filterable by event, CSV export
+- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload (file picker with preview), location, description, price, capacity, active toggle, show-availability toggle. Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event only (columns: Name, Email, Phone, Tickets), named `guestlist-<event-name>.csv`.
+- **Tickets** — filterable by event, full CSV export of all tickets
 
 **Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved. When editing, the current image is shown; selecting a new file replaces it.
+
+**Mobile layout**: on screens ≤768px the sidebar is hidden and replaced by a fixed bottom tab bar (Events | Tickets). Both tables collapse into stacked cards — each row becomes a full-height card with labelled fields, so all information is visible without horizontal scrolling. Tab switching syncs active state across both the sidebar (desktop) and the bottom nav (mobile).
 
 ### Events grid — `index.html`
 
@@ -114,7 +116,13 @@ Both use `data-netlify="true"`, a `name` attribute, and a `<input type="hidden" 
 
 ### Email — Resend
 
-Confirmation emails sent from `stripe-webhook` via Resend API. Currently using `onboarding@resend.dev` (test/development only — only delivers to verified addresses). For production, switch `RESEND_FROM_EMAIL` to `tickets@teachersconnect.com` after verifying the domain in Resend.
+Two emails sent from `stripe-webhook` on every successful payment:
+1. **Buyer confirmation** — sent to the ticket purchaser with event name, date, location, quantity, amount paid, and booking ref.
+2. **Owner notification** — sent to the business owner with buyer name, email, phone, event details, quantity, and amount.
+
+Currently using `onboarding@resend.dev` as the sending domain (test/development only — only delivers to the Resend account's own verified address). The owner notification is temporarily sent to `jaydenmistry713@gmail.com` for testing. For production, verify `teachersconnect.com` in Resend, switch `RESEND_FROM_EMAIL` to `tickets@teachersconnect.com`, and update the owner notification `to` address to the real business email.
+
+**Timezone**: event dates in emails are formatted with `timeZone: 'Europe/London'` so they display correctly in both GMT and BST.
 
 ## Environment variables
 
@@ -132,6 +140,7 @@ The Stripe **publishable key** (`pk_test_` / `pk_live_`) is hardcoded in `index.
 - [ ] Update `STRIPE_SECRET_KEY` env var to live key
 - [ ] Add a new Stripe webhook endpoint for `teachersconnect.com` and update `STRIPE_WEBHOOK_SECRET`
 - [ ] Verify `teachersconnect.com` domain in Resend and update `RESEND_FROM_EMAIL` to `tickets@teachersconnect.com`
+- [ ] Update owner notification `to` address in `stripe-webhook.js` from `jaydenmistry713@gmail.com` to the real business email (e.g. `mistuzzo.marketing@outlook.com`)
 - [ ] Connect live Netlify site to GitHub repo
 
 ## JavaScript patterns
