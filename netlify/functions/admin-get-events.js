@@ -23,6 +23,22 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 
+  // Attach ticket types
+  if (data && data.length > 0) {
+    const eventIds = data.map(e => e.id);
+    const { data: ticketTypes } = await supabase
+      .from('ticket_types')
+      .select('id, event_id, name, price, capacity, tickets_sold, sort_order, active')
+      .in('event_id', eventIds)
+      .order('sort_order', { ascending: true });
+    const typesByEvent = {};
+    (ticketTypes || []).forEach(t => {
+      if (!typesByEvent[t.event_id]) typesByEvent[t.event_id] = [];
+      typesByEvent[t.event_id].push(t);
+    });
+    data.forEach(e => { e.ticket_types = typesByEvent[e.id] || []; });
+  }
+
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },

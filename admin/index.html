@@ -257,6 +257,13 @@
     .toast.success { background: #059669; }
     .toast.error { background: var(--red); }
 
+    /* TICKET TYPE ROWS */
+    .ticket-type-row { display:grid; grid-template-columns:1fr 100px 100px 32px; gap:8px; align-items:center; margin-bottom:8px; }
+    .ticket-type-row input { padding:8px 10px; border:1px solid var(--gray-200); border-radius:var(--radius); font-family:inherit; font-size:13px; }
+    .ticket-type-row input:focus { outline:none; border-color:var(--teal); }
+    .tt-remove { width:32px; height:32px; background:none; border:1px solid var(--gray-200); border-radius:6px; cursor:pointer; color:var(--gray-500); display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .tt-remove:hover { background:var(--gray-100); color:var(--red); border-color:var(--red); }
+
     /* CAPACITY BAR */
     .capacity-bar { background: var(--gray-100); border-radius: 99px; height: 6px; margin-top: 4px; overflow: hidden; }
     .capacity-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.3s; }
@@ -520,6 +527,13 @@
             </div>
           </div>
         </div>
+        <div class="form-row single" style="margin-top:20px;">
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom:12px;">Ticket Types <span style="color:var(--gray-400);font-weight:400;">(optional — leave empty to use the single price above)</span></label>
+            <div id="ticket-types-list"></div>
+            <button type="button" onclick="addTicketTypeRow()" style="margin-top:10px;padding:8px 16px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-700);">+ Add Ticket Type</button>
+          </div>
+        </div>
         <p class="form-error" id="event-form-error"></p>
       </div>
       <div class="modal-footer">
@@ -732,6 +746,7 @@
     document.getElementById('f-image-preview').style.display = 'none';
     document.getElementById('f-image-current').style.display = 'none';
     document.getElementById('event-form-error').style.display = 'none';
+    document.getElementById('ticket-types-list').innerHTML = '';
     document.getElementById('event-modal').classList.add('open');
   }
 
@@ -763,6 +778,8 @@
       document.getElementById('f-image-current').style.display = 'none';
     }
     document.getElementById('event-form-error').style.display = 'none';
+    document.getElementById('ticket-types-list').innerHTML = '';
+    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.capacity));
     document.getElementById('event-modal').classList.add('open');
   }
 
@@ -833,6 +850,7 @@
       active: document.getElementById('f-active').checked,
       show_availability: document.getElementById('f-show-availability').checked,
       featured: document.getElementById('f-featured').checked,
+      ticket_types: getTicketTypes(),
     };
 
     try {
@@ -987,6 +1005,32 @@
     } catch (err) {
       toast(err.message, 'error');
     }
+  }
+
+  // ── TICKET TYPES ─────────────────────────────────────────────────────────
+
+  function escAdminHtml(str) { return String(str || '').replace(/"/g, '&quot;'); }
+
+  function addTicketTypeRow(name, price, capacity) {
+    name = name || '';
+    price = price || '';
+    capacity = capacity || '';
+    var list = document.getElementById('ticket-types-list');
+    var row = document.createElement('div');
+    row.className = 'ticket-type-row';
+    row.innerHTML = '<input type="text" placeholder="Type name (e.g. VIP)" value="' + escAdminHtml(name) + '" class="tt-name">' +
+      '<input type="number" placeholder="Price £" step="0.01" min="0" value="' + escAdminHtml(price) + '" class="tt-price">' +
+      '<input type="number" placeholder="Capacity" min="1" value="' + escAdminHtml(capacity) + '" class="tt-capacity">' +
+      '<button type="button" class="tt-remove" onclick="this.parentElement.remove()">×</button>';
+    list.appendChild(row);
+  }
+
+  function getTicketTypes() {
+    return Array.from(document.querySelectorAll('.ticket-type-row')).map(row => ({
+      name: row.querySelector('.tt-name').value.trim(),
+      price: row.querySelector('.tt-price').value,
+      capacity: row.querySelector('.tt-capacity').value,
+    })).filter(t => t.name && t.price && t.capacity);
   }
 
   // ── UTILS ─────────────────────────────────────────────────────────────────

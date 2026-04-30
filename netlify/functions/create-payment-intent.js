@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { event_id, name, email, phone, quantity } = body;
+  const { event_id, ticket_type_id, name, email, phone, quantity } = body;
 
   if (!event_id || !name || !email || !phone || !quantity || quantity < 1) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
@@ -36,7 +36,26 @@ exports.handler = async (event) => {
     return { statusCode: 404, body: JSON.stringify({ error: 'Event not found' }) };
   }
 
-  const remaining = eventData.capacity - eventData.tickets_sold;
+  let price, remaining, ticketTypeName = null;
+
+  if (ticket_type_id) {
+    const { data: typeData, error: typeError } = await supabase
+      .from('ticket_types')
+      .select('*')
+      .eq('id', ticket_type_id)
+      .eq('active', true)
+      .single();
+    if (typeError || !typeData) {
+      return { statusCode: 404, body: JSON.stringify({ error: 'Ticket type not found' }) };
+    }
+    price = typeData.price;
+    remaining = typeData.capacity - typeData.tickets_sold;
+    ticketTypeName = typeData.name;
+  } else {
+    price = eventData.price;
+    remaining = eventData.capacity - eventData.tickets_sold;
+  }
+
   if (quantity > remaining) {
     return {
       statusCode: 400,
@@ -44,7 +63,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const amount = eventData.price * quantity;
+  const amount = price * quantity;
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount,
@@ -56,11 +75,14 @@ exports.handler = async (event) => {
       buyer_email: email,
       buyer_phone: phone,
       quantity: String(quantity),
+      ...(ticket_type_id && { ticket_type_id, ticket_type_name: ticketTypeName }),
     },
   });
 
   const { error: ticketError } = await supabase.from('tickets').insert({
     event_id,
+    ticket_type_id: ticket_type_id || null,
+    ticket_type_name: ticketTypeName,
     buyer_name: name,
     buyer_email: email,
     buyer_phone: phone,

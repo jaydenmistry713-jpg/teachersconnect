@@ -1128,6 +1128,13 @@
             border-top-color: white; border-radius: 50%; animation: coSpin 0.6s linear infinite;
         }
         @keyframes coSpin { to { transform: rotate(360deg); } }
+        /* Ticket type selection */
+        .ticket-type-option { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:2px solid var(--gray-200); border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color 0.2s; }
+        .ticket-type-option:hover { border-color:var(--primary-400); }
+        .ticket-type-option.selected { border-color:#008A96; background:rgba(0,138,150,0.05); }
+        .ticket-type-option-name { font-weight:600; font-size:14px; color:var(--gray-900); }
+        .ticket-type-option-price { font-weight:700; font-size:15px; color:#008A96; }
+        .ticket-type-option-avail { font-size:12px; color:var(--gray-400); margin-top:2px; }
         /* Dynamic event cards */
         .events-loading { text-align: center; padding: 60px 20px; color: var(--gray-400); }
         .events-loading-spinner {
@@ -2050,6 +2057,11 @@
                 <div class="checkout-step active" id="step-details">
                     <div class="checkout-event-summary" id="checkout-summary"></div>
 
+                    <div id="ticket-type-section" style="display:none;margin-bottom:20px;">
+                        <label class="checkout-label">Select Ticket Type</label>
+                        <div id="ticket-type-options"></div>
+                    </div>
+
                     <div class="checkout-form-group">
                         <label class="checkout-label" for="co-name">Full Name *</label>
                         <input class="checkout-input" type="text" id="co-name" placeholder="Jane Smith" autocomplete="name" required>
@@ -2128,6 +2140,7 @@
         var loadedEvents = [];
         var checkoutEvent = null;
         var checkoutQty = 1;
+        var checkoutTicketType = null;
         var stripeInstance = null;
         var stripeElements = null;
 
@@ -2146,8 +2159,16 @@
             var remaining = ev.capacity - ev.tickets_sold;
             var soldOut = remaining <= 0;
             var date = formatDate(ev.date);
-            var price = '£' + (ev.price / 100).toFixed(2);
-            var btnLabel = soldOut ? 'Sold Out' : 'Buy Tickets — ' + price;
+            var priceLabel;
+            if (ev.ticket_types && ev.ticket_types.length > 0) {
+                var prices = ev.ticket_types.map(function(t) { return t.price; });
+                var minPrice = Math.min.apply(null, prices);
+                var maxPrice = Math.max.apply(null, prices);
+                priceLabel = minPrice === maxPrice ? '£' + (minPrice / 100).toFixed(2) : 'From £' + (minPrice / 100).toFixed(2);
+            } else {
+                priceLabel = '£' + (ev.price / 100).toFixed(2);
+            }
+            var btnLabel = soldOut ? 'Sold Out' : 'Buy Tickets — ' + priceLabel;
 
             var imageHtml = ev.image_url
                 ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">'
@@ -2230,17 +2251,20 @@
 
         function updateTotal() {
             if (!checkoutEvent) return;
-            var total = checkoutEvent.price * checkoutQty;
+            var price = checkoutTicketType ? checkoutTicketType.price : checkoutEvent.price;
+            var total = price * checkoutQty;
             document.getElementById('checkout-total-price').textContent = formatPrice(total);
         }
 
         function buildSummaryHTML(ev, qty) {
             var date = formatDate(ev.date);
+            var price = checkoutTicketType ? checkoutTicketType.price : ev.price;
+            var typeLine = checkoutTicketType ? ' · ' + escHtml(checkoutTicketType.name) : '';
             return '<div class="checkout-event-emoji">' + (ev.image_emoji || '🎉') + '</div>' +
                    '<div class="checkout-event-info">' +
                    '<h3>' + escHtml(ev.name) + '</h3>' +
                    '<p>' + date.full + '</p>' +
-                   '<p>' + escHtml(ev.location) + ' · ' + qty + ' ticket' + (qty > 1 ? 's' : '') + ' · ' + formatPrice(ev.price * qty) + '</p>' +
+                   '<p>' + escHtml(ev.location) + ' · ' + qty + ' ticket' + (qty > 1 ? 's' : '') + typeLine + ' · ' + formatPrice(price * qty) + '</p>' +
                    '</div>';
         }
 
@@ -2248,6 +2272,7 @@
             checkoutEvent = loadedEvents.find(function(e) { return e.id === eventId; });
             if (!checkoutEvent) return;
             checkoutQty = 1;
+            checkoutTicketType = null;
 
             // Reset form
             document.getElementById('co-name').value = '';
@@ -2256,6 +2281,46 @@
             document.getElementById('qty-display').textContent = '1';
             document.getElementById('details-error').style.display = 'none';
             document.getElementById('payment-error').style.display = 'none';
+
+            // Ticket type selection
+            var ttSection = document.getElementById('ticket-type-section');
+            var ttOptions = document.getElementById('ticket-type-options');
+            if (checkoutEvent.ticket_types && checkoutEvent.ticket_types.length > 0) {
+                ttSection.style.display = 'block';
+                ttOptions.innerHTML = '';
+                checkoutEvent.ticket_types.forEach(function(tt) {
+                    var remaining = tt.capacity - tt.tickets_sold;
+                    var soldOut = remaining <= 0;
+                    var div = document.createElement('div');
+                    div.className = 'ticket-type-option' + (soldOut ? ' disabled' : '');
+                    div.style.opacity = soldOut ? '0.5' : '1';
+                    div.style.cursor = soldOut ? 'not-allowed' : 'pointer';
+                    div.innerHTML = '<div><div class="ticket-type-option-name">' + escHtml(tt.name) + '</div>' +
+                        '<div class="ticket-type-option-avail">' + (soldOut ? 'Sold out' : remaining + ' left') + '</div></div>' +
+                        '<div class="ticket-type-option-price">£' + (tt.price / 100).toFixed(2) + '</div>';
+                    if (!soldOut) {
+                        div.addEventListener('click', function() {
+                            document.querySelectorAll('.ticket-type-option').forEach(function(o) { o.classList.remove('selected'); });
+                            div.classList.add('selected');
+                            checkoutTicketType = tt;
+                            updateTotal();
+                        });
+                    }
+                    ttOptions.appendChild(div);
+                });
+                // auto-select first available
+                checkoutTicketType = null;
+                var firstAvail = checkoutEvent.ticket_types.find(function(t) { return t.capacity - t.tickets_sold > 0; });
+                if (firstAvail) {
+                    checkoutTicketType = firstAvail;
+                    var firstOption = ttOptions.querySelector('.ticket-type-option:not([style*="not-allowed"])');
+                    if (firstOption) firstOption.classList.add('selected');
+                }
+            } else {
+                ttSection.style.display = 'none';
+                checkoutTicketType = null;
+            }
+
             document.getElementById('checkout-summary').innerHTML = buildSummaryHTML(checkoutEvent, 1);
             updateTotal();
             setStep('step-details');
@@ -2269,6 +2334,7 @@
             document.getElementById('checkoutBackdrop').classList.remove('open');
             document.body.style.overflow = '';
             checkoutEvent = null;
+            checkoutTicketType = null;
             if (stripeElements) { stripeElements = null; }
         }
 
@@ -2287,7 +2353,9 @@
             }
         });
         document.getElementById('qty-plus').addEventListener('click', function() {
-            var remaining = checkoutEvent ? checkoutEvent.capacity - checkoutEvent.tickets_sold : 10;
+            var remaining = checkoutTicketType
+                ? checkoutTicketType.capacity - checkoutTicketType.tickets_sold
+                : (checkoutEvent ? checkoutEvent.capacity - checkoutEvent.tickets_sold : 10);
             if (checkoutQty < Math.min(10, remaining)) {
                 checkoutQty++;
                 document.getElementById('qty-display').textContent = checkoutQty;
@@ -2313,22 +2381,29 @@
                 errEl.style.display = 'block';
                 return;
             }
+            if (checkoutEvent.ticket_types && checkoutEvent.ticket_types.length > 0 && !checkoutTicketType) {
+                errEl.textContent = 'Please select a ticket type.';
+                errEl.style.display = 'block';
+                return;
+            }
 
             var btn = this;
             btn.disabled = true;
             btn.innerHTML = '<div class="co-spinner"></div>';
 
             try {
+                var requestBody = {
+                    event_id: checkoutEvent.id,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    quantity: checkoutQty
+                };
+                if (checkoutTicketType) requestBody.ticket_type_id = checkoutTicketType.id;
                 var res = await fetch('/.netlify/functions/create-payment-intent', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        event_id: checkoutEvent.id,
-                        name: name,
-                        email: email,
-                        phone: phone,
-                        quantity: checkoutQty
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 var data = await res.json();
@@ -2340,7 +2415,8 @@
                 var paymentElement = stripeElements.create('payment');
 
                 document.getElementById('checkout-summary-2').innerHTML = buildSummaryHTML(checkoutEvent, checkoutQty);
-                document.getElementById('pay-btn-label').textContent = 'Pay ' + formatPrice(checkoutEvent.price * checkoutQty);
+                var priceForBtn = checkoutTicketType ? checkoutTicketType.price : checkoutEvent.price;
+                document.getElementById('pay-btn-label').textContent = 'Pay ' + formatPrice(priceForBtn * checkoutQty);
                 setStep('step-payment');
 
                 // Mount after DOM is visible
@@ -2379,7 +2455,8 @@
                 errEl.textContent = result.error.message;
                 errEl.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<span id="pay-btn-label">Pay ' + formatPrice(checkoutEvent.price * checkoutQty) + '</span>';
+                var priceForBtn = checkoutTicketType ? checkoutTicketType.price : checkoutEvent.price;
+                btn.innerHTML = '<span id="pay-btn-label">Pay ' + formatPrice(priceForBtn * checkoutQty) + '</span>';
             } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
                 var email = document.getElementById('co-email').value;
                 document.getElementById('success-message').textContent =

@@ -41,6 +41,14 @@ exports.handler = async (event) => {
     qty_param: qty,
   });
 
+  const { ticket_type_id } = paymentIntent.metadata;
+  if (ticket_type_id) {
+    await supabase.rpc('increment_ticket_type_sold', {
+      ticket_type_id_param: ticket_type_id,
+      qty_param: qty,
+    });
+  }
+
   const { data: ticket } = await supabase
     .from('tickets')
     .select('id')
@@ -103,6 +111,7 @@ exports.handler = async (event) => {
               <td style="padding:10px 0;color:#71717A;font-size:14px;">Tickets</td>
               <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${qty}</td>
             </tr>
+            ${ticket_type_id && paymentIntent.metadata.ticket_type_name ? `<tr style="border-top:1px solid #F4F4F5;"><td style="padding:10px 0;color:#71717A;font-size:14px;">Ticket Type</td><td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${paymentIntent.metadata.ticket_type_name}</td></tr>` : ''}
             <tr style="border-top:1px solid #F4F4F5;">
               <td style="padding:10px 0;color:#71717A;font-size:14px;">Amount</td>
               <td style="padding:10px 0;color:#008A96;font-weight:700;font-size:18px;">£${(amount / 100).toFixed(2)}</td>
@@ -148,6 +157,7 @@ exports.handler = async (event) => {
               <td style="padding:10px 0;color:#71717A;font-size:14px;">Tickets</td>
               <td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${qty}</td>
             </tr>
+            ${ticket_type_id && paymentIntent.metadata.ticket_type_name ? `<tr style="border-top:1px solid #F4F4F5;"><td style="padding:10px 0;color:#71717A;font-size:14px;">Ticket Type</td><td style="padding:10px 0;color:#18181B;font-weight:600;font-size:14px;">${paymentIntent.metadata.ticket_type_name}</td></tr>` : ''}
             <tr style="border-top:1px solid #F4F4F5;">
               <td style="padding:10px 0;color:#71717A;font-size:14px;">Total paid</td>
               <td style="padding:10px 0;color:#008A96;font-weight:700;font-size:18px;">£${(amount / 100).toFixed(2)}</td>

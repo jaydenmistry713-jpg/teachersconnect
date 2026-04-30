@@ -46,3 +46,24 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
 -- 1. Go to Storage in the Supabase dashboard
 -- 2. Create a new bucket named exactly: event-images
 -- 3. Toggle it to Public so uploaded images are accessible without a signed URL
+
+-- ── Ticket types (multiple price tiers per event) ─────────────────────────────
+CREATE TABLE IF NOT EXISTS ticket_types (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  price INTEGER NOT NULL, -- pence
+  capacity INTEGER NOT NULL,
+  tickets_sold INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_id UUID REFERENCES ticket_types(id);
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_type_name TEXT;
+
+CREATE OR REPLACE FUNCTION increment_ticket_type_sold(ticket_type_id_param UUID, qty_param INTEGER)
+RETURNS void AS $$
+  UPDATE ticket_types SET tickets_sold = tickets_sold + qty_param WHERE id = ticket_type_id_param;
+$$ LANGUAGE sql;

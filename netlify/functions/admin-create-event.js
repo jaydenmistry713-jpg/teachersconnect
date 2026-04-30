@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
-  const { name, date, location, description, price, capacity, image_url, active, show_availability, featured } = JSON.parse(event.body);
+  const { name, date, location, description, price, capacity, image_url, active, show_availability, featured, ticket_types } = JSON.parse(event.body);
 
   if (!name || !date || !location || !price || !capacity) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
@@ -42,6 +42,18 @@ exports.handler = async (event) => {
 
   if (error) {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  }
+
+  if (ticket_types && ticket_types.length > 0) {
+    const typesToInsert = ticket_types.map((t, i) => ({
+      event_id: data.id,
+      name: t.name,
+      price: Math.round(parseFloat(t.price) * 100),
+      capacity: parseInt(t.capacity, 10),
+      sort_order: i,
+      active: true,
+    }));
+    await supabase.from('ticket_types').insert(typesToInsert);
   }
 
   return {
