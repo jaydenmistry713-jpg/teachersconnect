@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Teachers Connect is a website for a London-based educator social community. It is deployed on Netlify at `teachersconnect.com`. The frontend is static HTML with no build system or framework. The backend runs as Netlify Functions (Node.js serverless) backed by Supabase (PostgreSQL) for data and Stripe for payments.
+Teachers Connect is a website for a London-based educator social community. It is deployed on Netlify at `teachersconnect.com` (currently at `teachersconnectv2.netlify.app` during transition). The frontend is static HTML with no build system or framework. The backend runs as Netlify Functions (Node.js serverless) backed by Supabase (PostgreSQL) for data and Stripe for payments.
 
 ## Development
 
@@ -27,21 +27,23 @@ Deployment is automatic on push to `main` via Netlify CI. No build step for the 
 ## Architecture
 
 ### Frontend
-**No shared files.** Each HTML page (`index.html`, `about.html`, `gallery.html`, `faq.html`, `contact.html`) is fully self-contained: CSS lives in a `<style>` block in `<head>`, JavaScript lives in a `<script>` block before `</body>`. Navigation, footer, and the entire CSS variable set are duplicated in every file.
+**No shared files.** Each HTML page (`index.html`, `about.html`, `gallery.html`, `faq.html`, `contact.html`, `events.html`) is fully self-contained: CSS lives in a `<style>` block in `<head>`, JavaScript lives in a `<script>` block before `</body>`. Navigation, footer, and the entire CSS variable set are duplicated in every file.
 
-**Consequence**: any change to the nav, footer, or shared styles must be applied to all five HTML files manually.
+**Consequence**: any change to the nav, footer, or shared styles must be applied to all six HTML files manually.
 
-**CSS custom properties** are defined in `:root` at the top of each page's `<style>` block. The primary color scale is slightly inconsistent between pages — `index.html`, `about.html`, and `gallery.html` use a teal-based primary palette (`--primary-500: #008A96`), while `contact.html` and `faq.html` define a purple-based scale (`--primary-500: #8B5CF6`) but override `--primary-600` back to the teal `#008A96`. When touching colors, check which palette the target page uses.
+**CSS custom properties** are defined in `:root` at the top of each page's `<style>` block. The primary color scale is slightly inconsistent between pages — `index.html`, `about.html`, `gallery.html`, and `events.html` use a teal-based primary palette (`--primary-500: #008A96`), while `contact.html` and `faq.html` define a purple-based scale (`--primary-500: #8B5CF6`) but override `--primary-600` back to the teal `#008A96`. When touching colors, check which palette the target page uses.
 
-**Brand colors** (consistent across all pages via `--rainbow`):
+**Accent / brand color**: `#008A96` (teal) is the primary accent used for highlighted text, buttons, and decorative elements across all pages. The `--rainbow` CSS variable is defined but no longer used for visible text — all gradient text was replaced with solid `#008A96`.
+
+**Brand colors** (consistent across all pages):
 - Red `#B33127`, Orange `#D17219`, Green `#689832`, Teal `#008A96`, Purple `#451E5B`
 
 **Fonts** (loaded from Google Fonts on all pages):
 - `Inter` — body text and headings
 - `Playfair Display` — italic accent text (`var(--font-accent)`)
-- `Syne` — display headings on `index.html`, `about.html`, `gallery.html` (not used on `contact.html`/`faq.html`)
+- `Syne` — display headings on `index.html`, `about.html`, `gallery.html`, `events.html` (not used on `contact.html`/`faq.html`)
 
-**Footer credit**: all five pages include "Website Created by [Mistuzzo](https://mistuzzo.com)" in the footer bottom bar.
+**Footer credit**: all pages include "Website Created by [Mistuzzo](https://mistuzzo.com)" in the footer bottom bar.
 
 ### Backend — Netlify Functions (`netlify/functions/`)
 
@@ -49,12 +51,12 @@ All functions use CommonJS (`require`/`module.exports`) and are bundled with esb
 
 | Function | Method | Auth | Purpose |
 |---|---|---|---|
-| `get-events` | GET | Public | Fetch active events → homepage |
+| `get-events` | GET | Public | Fetch active events; `?featured=true` returns only featured events |
 | `create-payment-intent` | POST | Public | Create Stripe PaymentIntent, save pending ticket |
 | `stripe-webhook` | POST | Stripe signature | Mark ticket paid, send confirmation emails (buyer + owner) |
-| `admin-get-events` | GET | Admin password | All events for admin panel |
-| `admin-create-event` | POST | Admin password | Create event |
-| `admin-update-event` | PUT | Admin password | Update event |
+| `admin-get-events` | GET | Admin password | All events (with ticket_types) for admin panel |
+| `admin-create-event` | POST | Admin password | Create event + ticket types |
+| `admin-update-event` | PUT | Admin password | Update event + replace ticket types |
 | `admin-delete-event` | DELETE | Admin password | Delete event |
 | `admin-get-tickets` | GET | Admin password | All ticket purchases, filterable by event |
 | `admin-upload-image` | POST | Admin password | Upload event image to Supabase Storage, return public URL |
@@ -63,17 +65,24 @@ Admin functions are protected by checking `event.headers['x-admin-password'] ===
 
 ### Database — Supabase (PostgreSQL)
 
-Two tables (see `supabase-schema.sql`):
-- `events` — id, name, date, location, description, price (pence), capacity, tickets_sold, image_url, show_availability, active, created_at
-- `tickets` — id, event_id, buyer_name, buyer_email, buyer_phone, quantity, stripe_payment_intent_id, amount_paid (pence), status (pending/paid/refunded), created_at
+Three tables (see `supabase-schema.sql`):
+- `events` — id, name, date, location, description, price (pence), capacity, tickets_sold, image_url, show_availability, active, featured, created_at
+- `tickets` — id, event_id, ticket_type_id (nullable), ticket_type_name (nullable), buyer_name, buyer_email, buyer_phone, quantity, stripe_payment_intent_id, amount_paid (pence), status (pending/paid/refunded), created_at
+- `ticket_types` — id, event_id, name, price (pence), capacity, tickets_sold, active, sort_order, created_at
 
 **Prices are always stored in pence (integers).** Divide by 100 for display; multiply by 100 when writing. The admin panel converts automatically.
 
-**`image_url`** (TEXT, nullable) — public URL of the event's uploaded image, stored in Supabase Storage bucket `event-images`. If null, event cards show a teal gradient placeholder. The old `image_emoji` column still exists in the DB but is no longer used by the UI.
+**`image_url`** (TEXT, nullable) — public URL of the event's uploaded image, stored in Supabase Storage bucket `event-images`. If null, event cards show a teal gradient placeholder.
 
-**`show_availability`** (BOOLEAN, default true) — controls whether the "X left" / "Sold out" badge is shown on the public event card. Toggled per-event in the admin panel. Always visible in the admin panel regardless of this setting.
+**`show_availability`** (BOOLEAN, default true) — controls whether the "X left" / "Sold out" badge is shown on the public event card.
 
-A Supabase RPC function `increment_tickets_sold(event_id_param, qty_param)` is used in the webhook to atomically increment `tickets_sold` after a successful payment.
+**`featured`** (BOOLEAN, default false) — controls whether the event appears on the homepage. Non-featured events are only shown on `events.html`. Toggled per-event in the admin panel.
+
+**Ticket types**: events can have zero or more ticket types (e.g. General Admission, VIP). If an event has ticket types, the checkout modal shows a type selector and uses the selected type's price and capacity. If no ticket types exist, the event's single price/capacity is used (backwards compatible).
+
+**RPC functions**:
+- `increment_tickets_sold(event_id_param, qty_param)` — atomically increments `events.tickets_sold`
+- `increment_ticket_type_sold(ticket_type_id_param, qty_param)` — atomically increments `ticket_types.tickets_sold`
 
 ### Supabase Storage
 
@@ -81,30 +90,31 @@ Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-
 
 ### Ticket purchase flow
 
-1. Homepage fetches `get-events` on load → renders event cards dynamically
-2. User clicks "Buy Tickets" → checkout modal opens (3-step)
-3. Step 1: name, email, phone, quantity → POST to `create-payment-intent` → returns Stripe `client_secret`
-4. Step 2: Stripe Payment Element mounts using `client_secret` → user pays
-5. `stripe.confirmPayment()` called with `redirect: 'if_required'` to keep payment on-page
-6. Stripe fires `payment_intent.succeeded` webhook → `stripe-webhook` function marks ticket paid, increments `tickets_sold`, sends two emails via Resend: (a) buyer confirmation with event details and booking ref, (b) owner notification with full buyer info
-7. Step 3: success screen shown to user
+1. Homepage fetches `get-events?featured=true` → renders featured event cards only
+2. `events.html` fetches `get-events` (no filter) → renders all active events
+3. User clicks "Buy Tickets" → checkout modal opens
+4. If event has ticket types: step 0 shows type selector (auto-selects first available)
+5. Step 1: name, email, phone, quantity → POST to `create-payment-intent` (with optional `ticket_type_id`) → returns Stripe `client_secret`
+6. Step 2: Stripe Payment Element mounts → user pays
+7. `stripe.confirmPayment()` called with `redirect: 'if_required'`
+8. Stripe fires `payment_intent.succeeded` webhook → `stripe-webhook` marks ticket paid, increments both `events.tickets_sold` and `ticket_types.tickets_sold` (if applicable), sends two emails via Resend
+9. Step 3: success screen shown to user
 
 ### Admin panel — `/admin/index.html`
 
 Single-page admin app. Password stored in `sessionStorage` after login and sent as `x-admin-password` header on every API call. Two tabs:
-- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload (file picker with preview), location, description, price, capacity, active toggle, show-availability toggle. Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event only (columns: Name, Email, Phone, Tickets), named `guestlist-<event-name>.csv`.
+- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload, location, description, price, capacity, active toggle, show-availability toggle, featured toggle, ticket types section (add/remove rows with name/price/capacity). Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event.
 - **Tickets** — filterable by event, full CSV export of all tickets
 
-**Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved. When editing, the current image is shown; selecting a new file replaces it.
+**Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved.
 
-**Mobile layout**: on screens ≤768px the sidebar is hidden and replaced by a fixed bottom tab bar (Events | Tickets). Both tables collapse into stacked cards — each row becomes a full-height card with labelled fields, so all information is visible without horizontal scrolling. Tab switching syncs active state across both the sidebar (desktop) and the bottom nav (mobile).
+**Mobile layout**: on screens ≤768px the sidebar is hidden and replaced by a fixed bottom tab bar (Events | Tickets). Both tables collapse into stacked cards.
 
-### Events grid — `index.html`
+### Events grid
 
-Event cards are rendered dynamically by JS into `#events-grid-container`. The grid uses `.events-grid` CSS class:
+Event cards are rendered dynamically by JS into `#events-grid-container` on both `index.html` and `events.html`. The grid uses `.events-grid` CSS class:
 - `grid-template-columns: repeat(auto-fit, minmax(300px, 380px))` with `justify-content: center`
-- Single or two events appear centred on desktop rather than left-aligned
-- Below 1024px the grid collapses to a single column
+- Cards show "From £X.XX" when an event has multiple ticket types at different prices
 
 ### Netlify Forms
 
@@ -112,15 +122,15 @@ Two forms are registered with Netlify:
 - **`newsletter`** — mailing list signup on `index.html`
 - **`contact`** — inquiry form on `contact.html`
 
-Both use `data-netlify="true"`, a `name` attribute, and a `<input type="hidden" name="form-name">` field. Submissions are POSTed to `/` via `fetch` with `Content-Type: application/x-www-form-urlencoded`. Email notifications for form submissions are configured in the Netlify dashboard under Forms → Notifications.
+Both use `data-netlify="true"`, a `name` attribute, and a `<input type="hidden" name="form-name">` field. Submissions are POSTed to `/` via `fetch` with `Content-Type: application/x-www-form-urlencoded`.
 
 ### Email — Resend
 
-Two emails sent from `stripe-webhook` on every successful payment:
-1. **Buyer confirmation** — sent to the ticket purchaser with event name, date, location, quantity, amount paid, and booking ref.
-2. **Owner notification** — sent to the business owner with buyer name, email, phone, event details, quantity, and amount.
+Domain `theteachersconnect.com` is verified in Resend. Two emails sent from `stripe-webhook` on every successful payment:
+1. **Buyer confirmation** — sent to the ticket purchaser with event name, date, location, ticket type (if applicable), quantity, amount paid, and booking ref.
+2. **Owner notification** — sent to `edwin@theteachersconnect.com` with full buyer info including ticket type.
 
-Currently using `onboarding@resend.dev` as the sending domain (test/development only — only delivers to the Resend account's own verified address). The owner notification is temporarily sent to `jaydenmistry713@gmail.com` for testing. For production, verify `teachersconnect.com` in Resend, switch `RESEND_FROM_EMAIL` to `tickets@teachersconnect.com`, and update the owner notification `to` address to the real business email.
+`RESEND_FROM_EMAIL` is set to `edwin@theteachersconnect.com` in Netlify env vars.
 
 **Timezone**: event dates in emails are formatted with `timeZone: 'Europe/London'` so they display correctly in both GMT and BST.
 
@@ -132,16 +142,18 @@ Set in Netlify dashboard — never committed to the repo. See `.env.example` for
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
 - `ADMIN_PASSWORD`
 
-The Stripe **publishable key** (`pk_test_` / `pk_live_`) is hardcoded in `index.html` — this is intentional as it is designed to be public. Currently set to the test key; swap to `pk_live_` when going to production along with updating `STRIPE_SECRET_KEY`.
+The Stripe **publishable key** (`pk_live_`) is hardcoded in `index.html` and `events.html` — this is intentional as it is designed to be public. Both files use the owner's live Stripe key.
 
 ## Going to production checklist
 
-- [ ] Swap `pk_test_` → `pk_live_` in `index.html`
-- [ ] Update `STRIPE_SECRET_KEY` env var to live key
-- [ ] Add a new Stripe webhook endpoint for `teachersconnect.com` and update `STRIPE_WEBHOOK_SECRET`
-- [ ] Verify `teachersconnect.com` domain in Resend and update `RESEND_FROM_EMAIL` to `tickets@teachersconnect.com`
-- [ ] Update owner notification `to` address in `stripe-webhook.js` from `jaydenmistry713@gmail.com` to the real business email (e.g. `mistuzzo.marketing@outlook.com`)
-- [ ] Connect live Netlify site to GitHub repo
+- [x] Swap `pk_test_` → `pk_live_` in `index.html` and `events.html`
+- [x] Update `STRIPE_SECRET_KEY` env var to owner's live key
+- [x] Add Stripe webhook endpoint and update `STRIPE_WEBHOOK_SECRET`
+- [x] Verify `theteachersconnect.com` domain in Resend
+- [x] Update `RESEND_FROM_EMAIL` to `edwin@theteachersconnect.com`
+- [x] Update owner notification `to` address to `edwin@theteachersconnect.com`
+- [ ] Point `theteachersconnect.com` DNS to this Netlify site
+- [ ] Run Supabase SQL migrations for `featured`, `ticket_types`, `ticket_type_id`/`ticket_type_name` on tickets
 
 ## JavaScript patterns
 
@@ -151,6 +163,7 @@ All frontend JS is vanilla, no libraries (except Stripe.js loaded from CDN). Rec
 - **Scroll-triggered animations**: elements with `[data-animate]` start at `opacity: 0; transform: translateY(30px)` and get `.animated` added by an `IntersectionObserver` (threshold 0.1). `data-delay` attribute adds a setTimeout offset in seconds.
 - **Fixed header scroll state**: `window.scroll` toggles `.scrolled` on `#header` when `pageYOffset > 50`.
 - **Mobile menu**: hamburger `#navToggle` toggles `.active` on both itself and `#mobileMenu`; `body.menu-open` disables scroll.
+- **Checkout state**: `checkoutEvent`, `checkoutQty`, `checkoutTicketType` track the current purchase. `checkoutTicketType` is `null` for single-price events.
 
 ## Images
 
@@ -158,5 +171,5 @@ Event images are uploaded via the admin panel and stored in Supabase Storage (`e
 
 ## SEO / crawl files
 
-- `sitemap.xml` — lists all five pages; `<lastmod>` dates should be updated when pages change.
+- `sitemap.xml` — lists all pages; `<lastmod>` dates should be updated when pages change.
 - `robots.txt` — allows all crawlers, disallows `/admin/` and `/private/`.
