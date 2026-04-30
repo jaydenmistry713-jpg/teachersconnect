@@ -107,10 +107,7 @@
             font-family: var(--font-body);
             font-size: 64px;
             font-weight: 800;
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
             animation: loaderPulse 1.5s ease-in-out infinite;
         }
         .loader-t { animation-delay: 0s; }
@@ -122,8 +119,7 @@
         .loader-bar { width: 200px; height: 3px; background: var(--gray-800); border-radius: var(--radius-full); overflow: hidden; }
         .loader-progress {
             height: 100%;
-            background: var(--rainbow);
-            background-size: 200% 100%;
+            background: #008A96;
             animation: loaderProgress 1.5s ease-in-out infinite;
             border-radius: var(--radius-full);
         }
@@ -287,7 +283,7 @@
         .nav-cta-bg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -354,10 +350,7 @@
         }
         .mobile-nav-link:hover .mobile-nav-text,
         .mobile-nav-link.active .mobile-nav-text {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .mobile-menu-footer { margin-top: auto; padding-top: var(--space-2xl); }
         .mobile-social { display: inline-flex; align-items: center; gap: var(--space-sm); color: var(--gray-400); font-size: 14px; transition: color var(--duration-normal); }
@@ -393,7 +386,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -500,7 +493,7 @@
         }
         .hero-left { max-width: 640px; }
         .hero-eyebrow { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xl); }
-        .eyebrow-line { width: 40px; height: 2px; background: var(--rainbow); border-radius: var(--radius-full); }
+        .eyebrow-line { width: 40px; height: 2px; background: #008A96; border-radius: var(--radius-full); }
         .hero-eyebrow span { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-500); }
         .hero-title {
             font-family: var(--font-body);
@@ -515,10 +508,7 @@
         .title-word { display: inline-block; margin-right: 0.2em; }
         .title-word.accent { color: var(--accent-pink); }
         .title-word.highlight {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .title-word.italic { font-family: var(--font-accent); font-style: italic; font-weight: 500; }
         .hero-description { font-size: 18px; line-height: 1.7; color: var(--gray-600); margin-bottom: var(--space-2xl); max-width: 520px; }
@@ -1052,6 +1042,7 @@
                 <ul class="nav-links">
                     <li><a href="index.html" class="nav-link">Home</a></li>
                     <li></li>
+                    <li><a href="events.html" class="nav-link">Events</a></li>
                     <li><a href="about.html" class="nav-link active">About</a></li>
                     <li><a href="gallery.html" class="nav-link">Gallery</a></li>
                     <li><a href="faq.html" class="nav-link">FAQ</a></li>
@@ -1080,21 +1071,24 @@
                     <span class="mobile-nav-number">01</span>
                     <span class="mobile-nav-text">Home</span>
                 </a>
-                
-                <a href="about.html" class="mobile-nav-link active">
+                <a href="events.html" class="mobile-nav-link">
                     <span class="mobile-nav-number">02</span>
+                    <span class="mobile-nav-text">Events</span>
+                </a>
+                <a href="about.html" class="mobile-nav-link active">
+                    <span class="mobile-nav-number">03</span>
                     <span class="mobile-nav-text">About</span>
                 </a>
                 <a href="gallery.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">03</span>
+                    <span class="mobile-nav-number">04</span>
                     <span class="mobile-nav-text">Gallery</span>
                 </a>
                 <a href="faq.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">04</span>
+                    <span class="mobile-nav-number">05</span>
                     <span class="mobile-nav-text">FAQ</span>
                 </a>
                 <a href="contact.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">05</span>
+                    <span class="mobile-nav-number">06</span>
                     <span class="mobile-nav-text">Contact</span>
                 </a>
             </nav>
@@ -1125,8 +1119,8 @@
                         <span>Our Story</span>
                     </div>
                     
-                    <h1 data-animate="fade-up" data-delay="0.3" style="font-family: var(--font-body); font-size: clamp(48px, 8vw, 86px); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--gray-900); margin-bottom: var(--space-xl); text-align: center; width: 100%;">
-                        Building London's Most <span style="background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Vibrant Teacher Community</span>
+                    <h1 data-animate="fade-up" data-delay="0.3" style="font-family: var(--font-body); font-size: clamp(36px, 6vw, 72px); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--gray-900); margin-bottom: var(--space-xl); text-align: center; width: 100%;">
+                        A community built for educators to socialise, network &amp; unwind
                     </h1>
 
                     <p class="hero-description" data-animate="fade-up" data-delay="0.5" style="text-align: center; margin-left: auto; margin-right: auto;">
@@ -1222,22 +1216,22 @@
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4xl); max-width: 1000px; margin: 0 auto;">
                     <div data-animate="fade-up" data-delay="0">
-                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: var(--space-sm);">500+</div>
+                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; color: #008A96; margin-bottom: var(--space-sm);">500+</div>
                         <p style="font-size: 18px; font-weight: 600; color: var(--gray-700);">Educators Connected</p>
                     </div>
 
                     <div data-animate="fade-up" data-delay="0.1">
-                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: var(--space-sm);">15+</div>
+                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; color: #008A96; margin-bottom: var(--space-sm);">15+</div>
                         <p style="font-size: 18px; font-weight: 600; color: var(--gray-700);">Events Hosted</p>
                     </div>
 
                     <div data-animate="fade-up" data-delay="0.2">
-                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: var(--space-sm);">100%</div>
+                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; color: #008A96; margin-bottom: var(--space-sm);">100%</div>
                         <p style="font-size: 18px; font-weight: 600; color: var(--gray-700);">Good Vibes</p>
                     </div>
 
                     <div data-animate="fade-up" data-delay="0.3">
-                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: var(--space-sm);">6</div>
+                        <div style="font-family: var(--font-body); font-size: 56px; font-weight: 800; color: #008A96; margin-bottom: var(--space-sm);">6</div>
                         <p style="font-size: 18px; font-weight: 600; color: var(--gray-700);">Events Per Year</p>
                     </div>
                 </div>
@@ -1311,7 +1305,7 @@
                         <h4 class="footer-heading">Navigation</h4>
                         <ul class="footer-links">
                             <li><a href="index.html">Home</a></li>
-                            <li></li>
+                            <li><a href="events.html">Events</a></li>
                             <li><a href="about.html">About Us</a></li>
                             <li><a href="gallery.html">Gallery</a></li>
                             <li><a href="faq.html">FAQ</a></li>

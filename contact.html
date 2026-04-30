@@ -226,7 +226,7 @@
         .nav-cta-bg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -293,10 +293,7 @@
         }
         .mobile-nav-link:hover .mobile-nav-text,
         .mobile-nav-link.active .mobile-nav-text {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .mobile-menu-footer { margin-top: auto; padding-top: var(--space-2xl); }
         .mobile-social { display: inline-flex; align-items: center; gap: var(--space-sm); color: var(--gray-400); font-size: 14px; transition: color var(--duration-normal); }
@@ -336,7 +333,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -446,7 +443,7 @@
         }
         .hero-left { max-width: 640px; }
         .hero-eyebrow { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xl); }
-        .eyebrow-line { width: 40px; height: 2px; background: var(--rainbow); border-radius: var(--radius-full); }
+        .eyebrow-line { width: 40px; height: 2px; background: #008A96; border-radius: var(--radius-full); }
         .hero-eyebrow span { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-500); }
         .hero-title {
             font-family: var(--font-body);
@@ -462,10 +459,7 @@
         .title-word { display: inline-block; margin-right: 0.2em; }
         .title-word.accent { color: var(--accent-pink); }
         .title-word.highlight {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .title-word.italic { font-family: var(--font-accent); font-style: italic; font-weight: 500; }
         .hero-description {
@@ -1013,7 +1007,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: var(--rainbow);
+            background: #008A96;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -1115,6 +1109,7 @@
                 <ul class="nav-links">
                     <li><a href="index.html" class="nav-link">Home</a></li>
                     <li></li>
+                    <li><a href="events.html" class="nav-link">Events</a></li>
                     <li><a href="about.html" class="nav-link">About</a></li>
                     <li><a href="gallery.html" class="nav-link">Gallery</a></li>
                     <li><a href="faq.html" class="nav-link">FAQ</a></li>
@@ -1143,21 +1138,24 @@
                     <span class="mobile-nav-number">01</span>
                     <span class="mobile-nav-text">Home</span>
                 </a>
-                
-                <a href="about.html" class="mobile-nav-link">
+                <a href="events.html" class="mobile-nav-link">
                     <span class="mobile-nav-number">02</span>
+                    <span class="mobile-nav-text">Events</span>
+                </a>
+                <a href="about.html" class="mobile-nav-link">
+                    <span class="mobile-nav-number">03</span>
                     <span class="mobile-nav-text">About</span>
                 </a>
                 <a href="gallery.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">03</span>
+                    <span class="mobile-nav-number">04</span>
                     <span class="mobile-nav-text">Gallery</span>
                 </a>
                 <a href="faq.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">04</span>
+                    <span class="mobile-nav-number">05</span>
                     <span class="mobile-nav-text">FAQ</span>
                 </a>
                 <a href="contact.html" class="mobile-nav-link active">
-                    <span class="mobile-nav-number">05</span>
+                    <span class="mobile-nav-number">06</span>
                     <span class="mobile-nav-text">Contact</span>
                 </a>
             </nav>
@@ -1175,7 +1173,7 @@
         <section class="hero" style="background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); padding: 100px 20px; text-align: center;">
             <div style="max-width: 900px; margin: 0 auto;">
                 <h1 style="font-size: 72px; font-weight: 800; line-height: 1.1; color: #18181B; margin-bottom: 20px;">
-                    Get In <span style="background: linear-gradient(90deg, #B33127, #D17219, #689832, #008A96, #451E5B); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Touch</span>
+                    Get In <span style="color: #008A96;">Touch</span>
                 </h1>
                 <p style="font-size: 20px; color: #71717A; max-width: 600px; margin: 0 auto;">
                     We'd love to hear from you
@@ -1191,7 +1189,7 @@
                         <span>Get In Touch</span>
                     </div>
                     <h2 class="section-title" data-animate="fade-up" data-delay="0.1" style="font-size: clamp(32px, 5vw, 48px);">
-                        Send Us A <span style="background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Message</span>
+                        Send Us A <span style="color: #008A96;">Message</span>
                     </h2>
                     <p class="section-description" data-animate="fade-up" data-delay="0.2" style="max-width: 600px; margin: 0 auto; color: var(--gray-600);">
                         Fill out the form below and we'll get back to you within 24 hours.
@@ -1273,7 +1271,7 @@
                         <span>Connect With Us</span>
                     </div>
                     <h2 class="section-title" data-animate="fade-up" data-delay="0.1" style="font-size: clamp(32px, 5vw, 48px);">
-                        Other Ways to <span style="background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Reach Us</span>
+                        Other Ways to <span style="color: #008A96;">Reach Us</span>
                     </h2>
                     <p class="section-description" data-animate="fade-up" data-delay="0.2" style="max-width: 600px; margin: 0 auto; color: var(--gray-600);">
                         Choose the platform that works best for you.
@@ -1395,7 +1393,7 @@
                         <h4 class="footer-heading">Navigation</h4>
                         <ul class="footer-links">
                             <li><a href="index.html">Home</a></li>
-                            <li></li>
+                            <li><a href="events.html">Events</a></li>
                             <li><a href="about.html">About Us</a></li>
                             <li><a href="gallery.html">Gallery</a></li>
                             <li><a href="faq.html">FAQ</a></li>

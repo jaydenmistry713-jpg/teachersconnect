@@ -514,6 +514,10 @@
               <input type="checkbox" id="f-show-availability" checked>
               <label for="f-show-availability">Show live ticket availability (e.g. "3 left")</label>
             </div>
+            <div class="form-toggle" style="margin-top:10px;">
+              <input type="checkbox" id="f-featured">
+              <label for="f-featured">Featured (shown on homepage)</label>
+            </div>
           </div>
         </div>
         <p class="form-error" id="event-form-error"></p>
@@ -724,6 +728,7 @@
     document.getElementById('event-form').reset();
     document.getElementById('f-active').checked = true;
     document.getElementById('f-show-availability').checked = true;
+    document.getElementById('f-featured').checked = false;
     document.getElementById('f-image-preview').style.display = 'none';
     document.getElementById('f-image-current').style.display = 'none';
     document.getElementById('event-form-error').style.display = 'none';
@@ -748,6 +753,7 @@
     document.getElementById('f-capacity').value = ev.capacity;
     document.getElementById('f-active').checked = ev.active;
     document.getElementById('f-show-availability').checked = ev.show_availability !== false;
+    document.getElementById('f-featured').checked = ev.featured === true;
     document.getElementById('f-image').value = '';
     document.getElementById('f-image-preview').style.display = 'none';
     if (ev.image_url) {
@@ -826,6 +832,7 @@
       capacity: document.getElementById('f-capacity').value,
       active: document.getElementById('f-active').checked,
       show_availability: document.getElementById('f-show-availability').checked,
+      featured: document.getElementById('f-featured').checked,
     };
 
     try {

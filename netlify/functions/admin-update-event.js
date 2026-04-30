@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
-  const { id, name, date, location, description, price, capacity, image_url, active, show_availability } = JSON.parse(event.body);
+  const { id, name, date, location, description, price, capacity, image_url, active, show_availability, featured } = JSON.parse(event.body);
 
   if (!id) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Event ID required' }) };
@@ -32,6 +32,7 @@ exports.handler = async (event) => {
     image_url: image_url !== undefined ? image_url : null,
     active,
     show_availability: show_availability !== false,
+    featured: featured === true,
   };
 
   if (price !== undefined) {

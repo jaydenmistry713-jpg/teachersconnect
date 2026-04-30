@@ -40,6 +40,7 @@ $$ LANGUAGE sql;
 
 ALTER TABLE events ADD COLUMN IF NOT EXISTS show_availability BOOLEAN DEFAULT true;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
 
 -- ── Supabase Storage setup (one-time, in the dashboard) ──────────────────────
 -- 1. Go to Storage in the Supabase dashboard

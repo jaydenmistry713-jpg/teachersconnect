@@ -261,7 +261,7 @@
         .nav-cta-bg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -328,10 +328,7 @@
         }
         .mobile-nav-link:hover .mobile-nav-text,
         .mobile-nav-link.active .mobile-nav-text {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .mobile-menu-footer { margin-top: auto; padding-top: var(--space-2xl); }
         .mobile-social { display: inline-flex; align-items: center; gap: var(--space-sm); color: var(--gray-400); font-size: 14px; transition: color var(--duration-normal); }
@@ -367,7 +364,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--primary-600), var(--accent-pink));
+            background: #008A96;
             opacity: 0;
             transition: opacity var(--duration-normal);
         }
@@ -474,7 +471,7 @@
         }
         .hero-left { max-width: 640px; }
         .hero-eyebrow { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xl); }
-        .eyebrow-line { width: 40px; height: 2px; background: var(--rainbow); border-radius: var(--radius-full); }
+        .eyebrow-line { width: 40px; height: 2px; background: #008A96; border-radius: var(--radius-full); }
         .hero-eyebrow span { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-500); }
         .hero-title {
             font-family: var(--font-body);
@@ -489,10 +486,7 @@
         .title-word { display: inline-block; margin-right: 0.2em; }
         .title-word.accent { color: var(--accent-pink); }
         .title-word.highlight {
-            background: var(--rainbow);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #008A96;
         }
         .title-word.italic { font-family: var(--font-accent); font-style: italic; font-weight: 500; }
         .hero-description { font-size: 18px; line-height: 1.7; color: var(--gray-600); margin-bottom: var(--space-2xl); max-width: 520px; }
@@ -1108,6 +1102,7 @@
                 <ul class="nav-links">
                     <li><a href="index.html" class="nav-link">Home</a></li>
                     <li></li>
+                    <li><a href="events.html" class="nav-link">Events</a></li>
                     <li><a href="about.html" class="nav-link">About</a></li>
                     <li><a href="gallery.html" class="nav-link active">Gallery</a></li>
                     <li><a href="faq.html" class="nav-link">FAQ</a></li>
@@ -1136,21 +1131,24 @@
                     <span class="mobile-nav-number">01</span>
                     <span class="mobile-nav-text">Home</span>
                 </a>
-                
-                <a href="about.html" class="mobile-nav-link">
+                <a href="events.html" class="mobile-nav-link">
                     <span class="mobile-nav-number">02</span>
+                    <span class="mobile-nav-text">Events</span>
+                </a>
+                <a href="about.html" class="mobile-nav-link">
+                    <span class="mobile-nav-number">03</span>
                     <span class="mobile-nav-text">About</span>
                 </a>
                 <a href="gallery.html" class="mobile-nav-link active">
-                    <span class="mobile-nav-number">03</span>
+                    <span class="mobile-nav-number">04</span>
                     <span class="mobile-nav-text">Gallery</span>
                 </a>
                 <a href="faq.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">04</span>
+                    <span class="mobile-nav-number">05</span>
                     <span class="mobile-nav-text">FAQ</span>
                 </a>
                 <a href="contact.html" class="mobile-nav-link">
-                    <span class="mobile-nav-number">05</span>
+                    <span class="mobile-nav-number">06</span>
                     <span class="mobile-nav-text">Contact</span>
                 </a>
             </nav>
@@ -1181,7 +1179,7 @@
                         <span>Gallery</span>
                     </div>
                     
-                    <h1 class="hero-title" style="text-align: center; font-size: clamp(48px, 8vw, 86px); font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; color: var(--gray-900); margin-bottom: var(--space-xl);">Memories & Moments <span style="background: var(--rainbow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">That Matter</span></h1>
+                    <h1 class="hero-title" style="text-align: center; font-size: clamp(48px, 8vw, 86px); font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; color: var(--gray-900); margin-bottom: var(--space-xl);">Memories & Moments <span style="color: #008A96;">That Matter</span></h1>
 
                     <p class="hero-description" data-animate="fade-up" data-delay="0.5" style="text-align: center; margin-left: auto; margin-right: auto;">
                         Relive the best moments from Teachers Connect events. See the joy, creativity, and connections we've built together.
@@ -1473,7 +1471,7 @@
                         <h4 class="footer-heading">NAVIGATION</h4>
                         <ul class="footer-links">
                             <li><a href="index.html">Home</a></li>
-                            <li></li>
+                            <li><a href="events.html">Events</a></li>
                             <li><a href="about.html">About Us</a></li>
                             <li><a href="gallery.html">Gallery</a></li>
                             <li><a href="faq.html">FAQ</a></li>
