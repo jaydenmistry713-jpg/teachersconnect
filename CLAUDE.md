@@ -56,7 +56,7 @@ All functions use CommonJS (`require`/`module.exports`) and are bundled with esb
 | `stripe-webhook` | POST | Stripe signature | Mark ticket paid, send confirmation emails (buyer + owner) |
 | `admin-get-events` | GET | Admin password | All events (with ticket_types) for admin panel |
 | `admin-create-event` | POST | Admin password | Create event + ticket types |
-| `admin-update-event` | PUT | Admin password | Update event + replace ticket types |
+| `admin-update-event` | PUT | Admin password | Update event + sync ticket types (update existing, insert new, delete removed) |
 | `admin-delete-event` | DELETE | Admin password | Delete event |
 | `admin-get-tickets` | GET | Admin password | All ticket purchases, filterable by event |
 | `admin-upload-image` | POST | Admin password | Upload event image to Supabase Storage, return public URL |
@@ -79,6 +79,8 @@ Three tables (see `supabase-schema.sql`):
 **`featured`** (BOOLEAN, default false) — controls whether the event appears on the homepage. Non-featured events are only shown on `events.html`. Toggled per-event in the admin panel.
 
 **Ticket types**: events can have zero or more ticket types (e.g. General Admission, VIP). If an event has ticket types, the checkout modal shows a type selector and uses the selected type's price and capacity. If no ticket types exist, the event's single price/capacity is used (backwards compatible).
+
+**Ticket type update strategy** (`admin-update-event`): ticket types are synced, not replaced. Existing rows are updated in place (preserving `tickets_sold`), new rows are inserted, and removed rows are deleted — but only after first nullifying `tickets.ticket_type_id` references to avoid a FK constraint violation. The admin UI tracks each ticket type's DB `id` via a `data-id` attribute on the row element so the backend can distinguish updates from new inserts. **Do not revert to delete-all + insert-all** — that pattern silently fails the DELETE when purchased tickets reference a ticket type, causing duplicates on every save.
 
 **RPC functions**:
 - `increment_tickets_sold(event_id_param, qty_param)` — atomically increments `events.tickets_sold`
