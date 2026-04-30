@@ -68,7 +68,7 @@ exports.handler = async (event) => {
 
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
-    to: 'jaydenmistry713@gmail.com',
+    to: 'edwin@theteachersconnect.com',
     subject: `New ticket sale: ${event_name}`,
     html: `
       <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#FAFAF9;">
