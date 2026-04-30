@@ -51,17 +51,46 @@ exports.handler = async (event) => {
   }
 
   if (ticket_types !== undefined) {
-    await supabase.from('ticket_types').delete().eq('event_id', id);
-    if (ticket_types && ticket_types.length > 0) {
-      const typesToInsert = ticket_types.map((t, i) => ({
-        event_id: id,
-        name: t.name,
-        price: Math.round(parseFloat(t.price) * 100),
-        capacity: parseInt(t.capacity, 10),
-        sort_order: i,
-        active: true,
-      }));
-      await supabase.from('ticket_types').insert(typesToInsert);
+    const incoming = ticket_types || [];
+
+    // Fetch current ticket types so we know what exists
+    const { data: existing } = await supabase
+      .from('ticket_types')
+      .select('id')
+      .eq('event_id', id);
+
+    const existingIds = new Set((existing || []).map(t => t.id));
+    const incomingIds = new Set(incoming.filter(t => t.id).map(t => t.id));
+
+    // IDs present in DB but removed from the form → delete them
+    const toDelete = [...existingIds].filter(eid => !incomingIds.has(eid));
+    if (toDelete.length > 0) {
+      // Clear FK references so the delete isn't blocked by purchased tickets
+      await supabase.from('tickets').update({ ticket_type_id: null }).in('ticket_type_id', toDelete);
+      await supabase.from('ticket_types').delete().in('id', toDelete);
+    }
+
+    for (let i = 0; i < incoming.length; i++) {
+      const t = incoming[i];
+      const priceInPence = Math.round(parseFloat(t.price) * 100);
+      const cap = parseInt(t.capacity, 10);
+
+      if (t.id && existingIds.has(t.id)) {
+        // Update existing type (preserves tickets_sold)
+        await supabase.from('ticket_types')
+          .update({ name: t.name, price: priceInPence, capacity: cap, sort_order: i })
+          .eq('id', t.id);
+      } else {
+        // Insert new type
+        await supabase.from('ticket_types').insert({
+          event_id: id,
+          name: t.name,
+          price: priceInPence,
+          capacity: cap,
+          sort_order: i,
+          active: true,
+        });
+      }
     }
   }
 

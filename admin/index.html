@@ -779,7 +779,7 @@
     }
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('ticket-types-list').innerHTML = '';
-    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.capacity));
+    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.capacity, t.id));
     document.getElementById('event-modal').classList.add('open');
   }
 
@@ -1011,13 +1011,14 @@
 
   function escAdminHtml(str) { return String(str || '').replace(/"/g, '&quot;'); }
 
-  function addTicketTypeRow(name, price, capacity) {
+  function addTicketTypeRow(name, price, capacity, id) {
     name = name || '';
     price = price || '';
     capacity = capacity || '';
     var list = document.getElementById('ticket-types-list');
     var row = document.createElement('div');
     row.className = 'ticket-type-row';
+    if (id) row.dataset.id = id;
     row.innerHTML = '<input type="text" placeholder="Type name (e.g. VIP)" value="' + escAdminHtml(name) + '" class="tt-name">' +
       '<input type="number" placeholder="Price £" step="0.01" min="0" value="' + escAdminHtml(price) + '" class="tt-price">' +
       '<input type="number" placeholder="Capacity" min="1" value="' + escAdminHtml(capacity) + '" class="tt-capacity">' +
@@ -1027,6 +1028,7 @@
 
   function getTicketTypes() {
     return Array.from(document.querySelectorAll('.ticket-type-row')).map(row => ({
+      id: row.dataset.id || null,
       name: row.querySelector('.tt-name').value.trim(),
       price: row.querySelector('.tt-price').value,
       capacity: row.querySelector('.tt-capacity').value,
