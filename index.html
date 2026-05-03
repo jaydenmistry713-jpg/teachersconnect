@@ -2296,7 +2296,7 @@
                     div.style.opacity = soldOut ? '0.5' : '1';
                     div.style.cursor = soldOut ? 'not-allowed' : 'pointer';
                     div.innerHTML = '<div><div class="ticket-type-option-name">' + escHtml(tt.name) + '</div>' +
-                        '<div class="ticket-type-option-avail">' + (soldOut ? 'Sold out' : remaining + ' left') + '</div></div>' +
+                        '<div class="ticket-type-option-avail">' + (soldOut ? 'Sold out' : (checkoutEvent.show_availability !== false ? remaining + ' left' : '')) + '</div></div>' +
                         '<div class="ticket-type-option-price">£' + (tt.price / 100).toFixed(2) + '</div>';
                     if (!soldOut) {
                         div.addEventListener('click', function() {

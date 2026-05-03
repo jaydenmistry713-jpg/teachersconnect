@@ -74,7 +74,7 @@ Three tables (see `supabase-schema.sql`):
 
 **`image_url`** (TEXT, nullable) — public URL of the event's uploaded image, stored in Supabase Storage bucket `event-images`. If null, event cards show a teal gradient placeholder.
 
-**`show_availability`** (BOOLEAN, default true) — controls whether the "X left" / "Sold out" badge is shown on the public event card.
+**`show_availability`** (BOOLEAN, default true) — controls whether the "X left" / "Sold out" badge is shown on the public event card **and** whether the per-ticket-type remaining count is shown in the checkout modal's type selector. When false, availability counts are hidden in both places; "Sold out" still appears on disabled ticket type options so users know why they can't select them.
 
 **`featured`** (BOOLEAN, default false) — controls whether the event appears on the homepage. Non-featured events are only shown on `events.html`. Toggled per-event in the admin panel.
 
