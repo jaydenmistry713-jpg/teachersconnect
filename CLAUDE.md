@@ -134,7 +134,7 @@ Domain `theteachersconnect.com` is verified in Resend. Two emails sent from `str
 
 `RESEND_FROM_EMAIL` is set to `edwin@theteachersconnect.com` in Netlify env vars.
 
-**Timezone**: event dates in emails are formatted with `timeZone: 'Europe/London'` so they display correctly in both GMT and BST.
+**Timezone**: event dates in emails are formatted with `timeZone: 'UTC'`.
 
 ## Environment variables
 
@@ -166,6 +166,16 @@ All frontend JS is vanilla, no libraries (except Stripe.js loaded from CDN). Rec
 - **Fixed header scroll state**: `window.scroll` toggles `.scrolled` on `#header` when `pageYOffset > 50`.
 - **Mobile menu**: hamburger `#navToggle` toggles `.active` on both itself and `#mobileMenu`; `body.menu-open` disables scroll.
 - **Checkout state**: `checkoutEvent`, `checkoutQty`, `checkoutTicketType` track the current purchase. `checkoutTicketType` is `null` for single-price events.
+
+## Event date/time — timezone handling
+
+Event times are stored and displayed as **wall-clock UTC**. The rule is: whatever time the admin types in the form is the time every visitor sees, regardless of where either person's browser is located.
+
+**How it works:**
+- Admin submit sends `datetime-local` value with `+00:00` appended (e.g. `2026-05-27T14:00:00+00:00`), so JavaScript never applies a local-timezone offset before storing.
+- All display code (`formatDate()` in `index.html`/`events.html`, admin list view, confirmation emails) uses `timeZone: 'UTC'` so the stored UTC hours are rendered as-is.
+
+**Do not** use `new Date(value).toISOString()` to serialize the admin form date — that converts through the browser's local timezone and will shift the time for any admin not in UTC. Do not use `toLocaleTimeString` / `toLocaleDateString` without an explicit `timeZone: 'UTC'` option on any event date display.
 
 ## Images
 
