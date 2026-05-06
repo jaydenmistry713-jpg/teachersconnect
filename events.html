@@ -909,10 +909,10 @@
         function formatDate(isoString) {
             var d = new Date(isoString);
             return {
-                day: d.toLocaleDateString('en-GB', { day: 'numeric' }),
-                month: d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase(),
-                full: d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
-                      ' at ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                day: d.toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }),
+                month: d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase(),
+                full: d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) +
+                      ' at ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
             };
         }
 

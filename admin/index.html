@@ -700,7 +700,7 @@
             }
             <strong>${esc(ev.name)}</strong>
           </td>
-          <td data-label="Date">${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })} <span style="color:var(--gray-400);font-size:12px;">${date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}</span></td>
+          <td data-label="Date">${date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' })} <span style="color:var(--gray-400);font-size:12px;">${date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', timeZone:'UTC' })}</span></td>
           <td data-label="Location" style="color:var(--gray-600);">${esc(ev.location)}</td>
           <td data-label="Price" style="font-weight:600;">£${(ev.price / 100).toFixed(2)}</td>
           <td data-label="Capacity">
@@ -758,10 +758,8 @@
     document.getElementById('modal-save-btn').textContent = 'Save Changes';
     document.getElementById('event-id').value = ev.id;
     document.getElementById('f-name').value = ev.name;
-    // Convert UTC date to local datetime-local format
     const d = new Date(ev.date);
-    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    document.getElementById('f-date').value = local;
+    document.getElementById('f-date').value = d.toISOString().slice(0, 16);
     document.getElementById('f-location').value = ev.location;
     document.getElementById('f-description').value = ev.description || '';
     document.getElementById('f-price').value = (ev.price / 100).toFixed(2);
@@ -841,7 +839,7 @@
 
     const payload = {
       name: document.getElementById('f-name').value.trim(),
-      date: new Date(document.getElementById('f-date').value).toISOString(),
+      date: document.getElementById('f-date').value + ':00+00:00',
       image_url,
       location: document.getElementById('f-location').value.trim(),
       description: document.getElementById('f-description').value.trim(),

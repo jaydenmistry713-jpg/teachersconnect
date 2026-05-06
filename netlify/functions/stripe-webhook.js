@@ -64,7 +64,7 @@ exports.handler = async (event) => {
   const bookingRef = ticket ? ticket.id.slice(0, 8).toUpperCase() : paymentIntent.id.slice(-8).toUpperCase();
   const eventDate = eventData
     ? new Date(eventData.date).toLocaleDateString('en-GB', {
-        timeZone: 'Europe/London',
+        timeZone: 'UTC',
         weekday: 'long',
         year: 'numeric',
         month: 'long',
