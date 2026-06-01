@@ -179,7 +179,7 @@ Event times are stored and displayed as **wall-clock UTC**. The rule is: whateve
 
 ## Images
 
-Event images are uploaded via the admin panel and stored in Supabase Storage (`event-images` bucket). Gallery photos are stored as `.webp` files (`edwin01.webp` – `edwin06.webp`) and used in `gallery.html`. Favicons exist in multiple formats (`.ico`, 16×16, 32×32, 192×192, 512×512 PNG, Apple touch icon) and a PWA manifest (`site.webmanifest`) is present.
+Event images are uploaded via the admin panel and stored in Supabase Storage (`event-images` bucket). Gallery photos live in the `gallery/` folder — currently `edwin01.webp` – `edwin06.webp` (original `.webp` files) and `IMG_9746 Edwin.png` / `IMG_9764–IMG_9839 Edwin.jpeg` (11 newer photos). All 17 are referenced in `gallery.html` with paths like `gallery/edwin01.webp`. Favicons stay in the project root (`.ico`, 16×16, 32×32, 192×192, 512×512 PNG, Apple touch icon) and a PWA manifest (`site.webmanifest`) is present.
 
 ## SEO / crawl files
 
