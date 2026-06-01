@@ -157,6 +157,12 @@ The Stripe **publishable key** (`pk_live_`) is hardcoded in `index.html` and `ev
 - [ ] Point `theteachersconnect.com` DNS to this Netlify site
 - [ ] Run Supabase SQL migrations for `featured`, `ticket_types`, `ticket_type_id`/`ticket_type_name` on tickets
 
+## Work in progress — Trustpilot reviews section
+
+`index-trustpilot.html` is a local-only copy of `index.html` (excluded from git via `.gitignore`) where the Trustpilot reviews section is being developed. It replaces the existing testimonials section with a custom Trustpilot-styled widget: a Trustpilot logo/branding header linking to the real profile, three skeleton review card placeholders, and a "Leave us a review on Trustpilot" CTA button. The skeleton cards are intentionally empty — real reviews will be pasted in manually as they come in on Trustpilot.
+
+**When ready to go live**: copy the CSS block (`/* ==================== TRUSTPILOT SECTION ====================*/` through the closing media queries) and the `<!-- Trustpilot Reviews Section -->` HTML block from `index-trustpilot.html` into `index.html`, replacing the existing `<!-- Testimonials Section -->` block.
+
 ## JavaScript patterns
 
 All frontend JS is vanilla, no libraries (except Stripe.js loaded from CDN). Recurring patterns:
