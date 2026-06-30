@@ -421,7 +421,7 @@
         .event-row {
             position: relative;
             display: grid;
-            grid-template-columns: 280px 1fr 232px;
+            grid-template-columns: 258px 1fr 286px;
             background: var(--white);
             border: 1px solid var(--gray-200);
             border-radius: var(--radius-xl);
@@ -448,9 +448,13 @@
         .event-row-desc { font-size: 13.5px; line-height: 1.6; color: var(--gray-500); margin: 0; }
         .event-row-tickets { padding: var(--space-xl) var(--space-lg); border-left: 1px solid var(--gray-100); display: flex; flex-direction: column; }
         .event-row-tickets-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: var(--space-md); }
-        .ticket-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 8px; }
-        .ticket-opt-name { font-size: 13px; font-weight: 600; color: var(--gray-700); }
-        .ticket-opt-price { font-size: 16px; font-weight: 800; }
+        /* Options grow to evenly fill the space between the label and the button */
+        .event-row-tickets-options { flex: 1; display: flex; flex-direction: column; gap: 12px; margin-bottom: var(--space-md); min-height: 0; }
+        .ticket-opt { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 18px; border-radius: var(--radius-md); min-height: 60px; }
+        .ticket-opt-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .ticket-opt-icon { display: flex; align-items: center; flex-shrink: 0; }
+        .ticket-opt-name { font-size: 15px; font-weight: 600; color: var(--gray-700); white-space: nowrap; }
+        .ticket-opt-price { font-size: 17px; font-weight: 800; flex-shrink: 0; white-space: nowrap; }
         .event-row-get {
             margin-top: auto; width: 100%; padding: 13px;
             border: none; border-radius: var(--radius-full);
@@ -461,6 +465,26 @@
         }
         .event-row-get:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
         .event-row-get:disabled { background: var(--gray-300) !important; color: var(--gray-500); cursor: not-allowed; }
+
+        /* Themed background for the lower part of the page (differentiated from the cream hero) */
+        .events-section, .lower-section {
+            position: relative;
+            background-color: #FCFCFA;
+            background-image: radial-gradient(rgba(0,138,150,0.05) 1.5px, transparent 1.5px);
+            background-size: 26px 26px;
+        }
+        .events-section { overflow: hidden; padding: var(--space-3xl) var(--space-2xl) var(--space-4xl); }
+        .lower-section { padding: 0 var(--space-2xl) var(--space-5xl); }
+        .events-section::before {
+            content: ''; position: absolute; top: -150px; left: -150px;
+            width: 460px; height: 460px; border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle, rgba(104,152,50,0.13), rgba(104,152,50,0) 70%);
+        }
+        .events-section::after {
+            content: ''; position: absolute; bottom: -170px; right: -130px;
+            width: 500px; height: 500px; border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle, rgba(209,114,25,0.13), rgba(209,114,25,0) 70%);
+        }
 
         /* Community banner */
         .community-banner {
@@ -837,7 +861,7 @@
         </section>
 
         <!-- Events Grid -->
-        <section style="background: var(--white); padding: var(--space-3xl) var(--space-2xl) var(--space-4xl);">
+        <section class="events-section">
             <div class="container">
                 <div id="events-grid-container">
                     <div class="events-loading">
@@ -849,7 +873,7 @@
         </section>
 
         <!-- Community Banner -->
-        <section style="background: var(--white); padding: 0 var(--space-2xl) var(--space-5xl);">
+        <section class="lower-section">
             <div class="community-banner" data-animate="fade-up">
                 <div class="community-banner-text">
                     <div class="community-banner-heart">
@@ -1135,6 +1159,12 @@
         var ICON_PIN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         var ICON_CLOCK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
         var ICON_ARROW = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+        var ICON_SINGLE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>';
+        var ICON_DUO = '<svg width="20" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 20a6 6 0 0 1 12 0"/><path d="M15.5 5.2a3 3 0 0 1 0 5.6"/><path d="M16.5 13.4a6 6 0 0 1 5 6.6"/></svg>';
+
+        function ticketIcon(name) {
+            return /duo|two|couple|pair|\(2\)|x\s*2|×\s*2/i.test(String(name || '')) ? ICON_DUO : ICON_SINGLE;
+        }
 
         function renderEventCard(ev, idx) {
             var theme = CARD_THEMES[idx % CARD_THEMES.length];
@@ -1149,20 +1179,22 @@
                 : '<div class="media-placeholder" style="background:linear-gradient(135deg,' + theme.color + ',rgba(0,0,0,0.45));"></div>';
 
             // Ticket option preview boxes (selection still happens in the checkout modal)
+            function ticketOptHTML(name, price, sold) {
+                return '<div class="ticket-opt" style="background:' + theme.tint + ';' + (sold ? 'opacity:0.5;' : '') + '">' +
+                    '<span class="ticket-opt-left">' +
+                        '<span class="ticket-opt-icon" style="color:' + theme.color + ';">' + ticketIcon(name) + '</span>' +
+                        '<span class="ticket-opt-name">' + escHtml(name) + '</span>' +
+                    '</span>' +
+                    '<span class="ticket-opt-price" style="color:' + theme.color + ';">' + formatPrice(price) + '</span>' +
+                '</div>';
+            }
             var ticketsHtml = '';
             if (hasTypes) {
                 ev.ticket_types.forEach(function(tt) {
-                    var ttSold = (tt.capacity - tt.tickets_sold) <= 0;
-                    ticketsHtml += '<div class="ticket-opt" style="background:' + theme.tint + ';' + (ttSold ? 'opacity:0.5;' : '') + '">' +
-                        '<span class="ticket-opt-name">' + escHtml(tt.name) + '</span>' +
-                        '<span class="ticket-opt-price" style="color:' + theme.color + ';">' + formatPrice(tt.price) + '</span>' +
-                    '</div>';
+                    ticketsHtml += ticketOptHTML(tt.name, tt.price, (tt.capacity - tt.tickets_sold) <= 0);
                 });
             } else {
-                ticketsHtml = '<div class="ticket-opt" style="background:' + theme.tint + ';">' +
-                    '<span class="ticket-opt-name">Ticket</span>' +
-                    '<span class="ticket-opt-price" style="color:' + theme.color + ';">' + formatPrice(ev.price) + '</span>' +
-                '</div>';
+                ticketsHtml = ticketOptHTML('Ticket', ev.price, false);
             }
 
             // Description may carry a "[[DETAILS]]" delimiter: text before it is the
@@ -1182,14 +1214,14 @@
                     '<div class="event-row-meta">' +
                         '<div class="event-row-meta-item">' + ICON_CAL + '<span>' + date.dateLong + '</span></div>' +
                         '<div class="event-row-meta-item">' + ICON_PIN + '<span>' + escHtml(ev.location) + '</span></div>' +
-                        '<div class="event-row-meta-item">' + ICON_CLOCK + '<span>' + date.time + '</span></div>' +
+                        '<div class="event-row-meta-item">' + ICON_CLOCK + '<span>' + (parsed.timeRange || date.time) + '</span></div>' +
                     '</div>' +
                     descHtml +
                     detailsBtn +
                 '</div>' +
                 '<div class="event-row-tickets">' +
                     '<div class="event-row-tickets-label">Ticket Options</div>' +
-                    ticketsHtml +
+                    '<div class="event-row-tickets-options">' + ticketsHtml + '</div>' +
                     '<button class="event-row-get" ' + (soldOut ? 'disabled' : '') +
                         ' style="background:' + theme.color + ';" onclick="openCheckout(\'' + ev.id + '\')">' +
                         (soldOut ? 'Sold Out' : 'Get Tickets ' + ICON_ARROW) +
@@ -1199,11 +1231,15 @@
         }
 
         // Split a description into the short card blurb and the full details body.
+        // A "[[TIME:10:00 AM – 3:00 PM]]" marker (anywhere) sets the displayed time
+        // range and is stripped from the visible text.
         function splitDescription(desc) {
             var text = String(desc || '');
+            var timeRange = '';
+            text = text.replace(/\[\[TIME:([^\]]+)\]\]/, function(_, t) { timeRange = t.trim(); return ''; });
             var idx = text.indexOf('[[DETAILS]]');
-            if (idx === -1) return { blurb: text.trim(), full: '' };
-            return { blurb: text.slice(0, idx).trim(), full: text.slice(idx + 11).trim() };
+            if (idx === -1) return { blurb: text.trim(), full: '', timeRange: timeRange };
+            return { blurb: text.slice(0, idx).trim(), full: text.slice(idx + 11).trim(), timeRange: timeRange };
         }
 
         // Turn the plain-text details body into formatted HTML.
@@ -1251,7 +1287,7 @@
             document.getElementById('details-meta').innerHTML =
                 '<div class="details-meta-item">' + ICON_CAL + '<span>' + date.dateLong + '</span></div>' +
                 '<div class="details-meta-item">' + ICON_PIN + '<span>' + escHtml(ev.location) + '</span></div>' +
-                '<div class="details-meta-item">' + ICON_CLOCK + '<span>' + date.time + '</span></div>';
+                '<div class="details-meta-item">' + ICON_CLOCK + '<span>' + (parsed.timeRange || date.time) + '</span></div>';
             document.getElementById('details-body').innerHTML = renderDetailsBody(parsed.full || parsed.blurb);
 
             var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
