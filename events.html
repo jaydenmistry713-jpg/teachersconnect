@@ -1373,6 +1373,12 @@
             .then(function(events) {
                 loadedEvents = events;
                 renderEvents(events);
+                // Deep link: events.html?event=<id> opens that event's details modal
+                // (used by the homepage "View Details" CTA).
+                var eid = new URLSearchParams(window.location.search).get('event');
+                if (eid && loadedEvents.some(function(e) { return e.id === eid; })) {
+                    openDetails(eid);
+                }
             })
             .catch(function() {
                 document.getElementById('events-grid-container').innerHTML =
