@@ -472,8 +472,11 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Date & Time *</label>
+            <label class="form-label">Date & Start Time *</label>
             <input type="datetime-local" class="form-input" id="f-date" required>
+            <label class="form-label" style="margin-top:12px;">End Time</label>
+            <input type="time" class="form-input" id="f-end-time">
+            <span class="form-hint">Optional — shows a time range (e.g. 10:00 AM – 3:00 PM) on the site and in confirmation emails.</span>
           </div>
           <div class="form-group">
             <label class="form-label">Event Image</label>
@@ -750,6 +753,44 @@
     document.getElementById('event-modal').classList.add('open');
   }
 
+  // ── Time-range marker helpers ─────────────────────────────────────────
+  // The displayed time range lives in a "[[TIME:10:00 AM – 3:00 PM]]" marker
+  // at the start of the description. The End Time field reads/writes it so the
+  // admin never edits the marker by hand.
+  function fmt12h(hhmm) {
+    if (!hhmm) return '';
+    const p = hhmm.split(':');
+    let h = parseInt(p[0], 10);
+    const mm = p[1] || '00';
+    const ap = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12; if (h12 === 0) h12 = 12;
+    return h12 + ':' + mm + ' ' + ap;
+  }
+  function parse12hTo24(s) {
+    const m = String(s || '').trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!m) return '';
+    let h = parseInt(m[1], 10);
+    if (m[3]) { h = h % 12; if (/pm/i.test(m[3])) h += 12; }
+    return String(h).padStart(2, '0') + ':' + m[2];
+  }
+  function stripTimeMarker(desc) {
+    return String(desc || '').replace(/\[\[TIME:[^\]]*\]\]\s*/, '');
+  }
+  function endTimeFromDesc(desc) {
+    const m = String(desc || '').match(/\[\[TIME:([^\]]+)\]\]/);
+    if (!m) return '';
+    const parts = m[1].split(/–|—|-|to/i);
+    return parts.length >= 2 ? parse12hTo24(parts[1]) : '';
+  }
+  // Returns the description with an up-to-date [[TIME:...]] marker (or none).
+  function applyTimeMarker(desc, startHHMM, endHHMM) {
+    const cleaned = stripTimeMarker(desc);
+    if (endHHMM && startHHMM) {
+      return '[[TIME:' + fmt12h(startHHMM) + ' – ' + fmt12h(endHHMM) + ']]' + cleaned;
+    }
+    return cleaned;
+  }
+
   function openEditModal(id) {
     const ev = allEvents.find(e => e.id === id);
     if (!ev) return;
@@ -760,8 +801,9 @@
     document.getElementById('f-name').value = ev.name;
     const d = new Date(ev.date);
     document.getElementById('f-date').value = d.toISOString().slice(0, 16);
+    document.getElementById('f-end-time').value = endTimeFromDesc(ev.description);
     document.getElementById('f-location').value = ev.location;
-    document.getElementById('f-description').value = ev.description || '';
+    document.getElementById('f-description').value = stripTimeMarker(ev.description || '');
     document.getElementById('f-price').value = (ev.price / 100).toFixed(2);
     document.getElementById('f-capacity').value = ev.capacity;
     document.getElementById('f-active').checked = ev.active;
@@ -837,12 +879,16 @@
       image_url = existing ? existing.image_url || null : null;
     }
 
+    const startHHMM = (document.getElementById('f-date').value.split('T')[1] || '').slice(0, 5);
+    const endHHMM = document.getElementById('f-end-time').value;
+    const description = applyTimeMarker(document.getElementById('f-description').value.trim(), startHHMM, endHHMM);
+
     const payload = {
       name: document.getElementById('f-name').value.trim(),
       date: document.getElementById('f-date').value + ':00+00:00',
       image_url,
       location: document.getElementById('f-location').value.trim(),
-      description: document.getElementById('f-description').value.trim(),
+      description,
       price: document.getElementById('f-price').value,
       capacity: document.getElementById('f-capacity').value,
       active: document.getElementById('f-active').checked,

@@ -57,22 +57,27 @@ exports.handler = async (event) => {
 
   const { data: eventData } = await supabase
     .from('events')
-    .select('date, location')
+    .select('date, location, description')
     .eq('id', event_id)
     .single();
 
   const bookingRef = ticket ? ticket.id.slice(0, 8).toUpperCase() : paymentIntent.id.slice(-8).toUpperCase();
-  const eventDate = eventData
-    ? new Date(eventData.date).toLocaleDateString('en-GB', {
-        timeZone: 'UTC',
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '';
+
+  // The displayed time range is stored as a "[[TIME:10:00 AM – 3:00 PM]]" marker
+  // in the description (front-end + admin convention). Use it for the email when
+  // present, otherwise fall back to the stored start time. Always wall-clock UTC.
+  let eventDate = '';
+  if (eventData) {
+    const d = new Date(eventData.date);
+    const datePart = d.toLocaleDateString('en-GB', {
+      timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const timeMatch = String(eventData.description || '').match(/\[\[TIME:([^\]]+)\]\]/);
+    const timePart = timeMatch
+      ? timeMatch[1].trim()
+      : d.toLocaleTimeString('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' });
+    eventDate = datePart + ', ' + timePart;
+  }
 
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
