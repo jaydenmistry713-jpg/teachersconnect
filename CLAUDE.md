@@ -118,7 +118,9 @@ Event cards are rendered dynamically by JS into `#events-grid-container`.
 
 **`index.html`** uses the vertical card grid (`.events-grid` CSS class):
 - `grid-template-columns: repeat(auto-fit, minmax(300px, 380px))` with `justify-content: center`
-- Cards show "From £X.XX" when an event has multiple ticket types at different prices
+- The featured-events section heading is styled like the events-page hero (cream `#FBF5EC` background, "Teachers Connect" eyebrow, Playfair "SUMMER SERIES 2026" title + "Connect. Unwind. Have Fun." italic subtitle, subtle peach blob + dots). Title size is capped (`clamp(36px,5vw,56px)`) so the section is no larger than before.
+- `cardBlurb()` strips the `[[TIME:...]]` marker and everything after `[[DETAILS]]` so cards show only the short blurb (same as the events page).
+- **Card CTA is "View Details"** — an `<a>` linking to `events.html?event=<id>` (no longer opens checkout on the homepage). `events.html` reads `?event=<id>` after load and calls `openDetails(id)` to open that event's details modal. The homepage checkout modal/JS still exists but is no longer triggered from the cards.
 
 **`events.html` — "Summer Series" layout (redesigned).** Events render as full-width horizontal rows (`.events-stack` > `.event-row`), a 3-column grid (image | details | ticket options) that stacks on screens ≤900px. The hero is a cream-background "SUMMER SERIES 2026" / "Connect. Unwind. Have Fun. ♡" block (`.summer-hero`), and a "Join the Community" banner (`.community-banner`) sits below the events. Key details:
 - **Per-card theming cycles by event order** via the `CARD_THEMES` array (green → red → gold → teal → purple). The Nth active event returned by `get-events` gets the Nth theme: this drives the title color, the circular emoji badge, the ticket-option tint, the price color, and the "Get Tickets" button. **The CMS does not store a color/emoji per event — order determines it.** To change which event gets which color/icon, reorder events or edit `CARD_THEMES`.
