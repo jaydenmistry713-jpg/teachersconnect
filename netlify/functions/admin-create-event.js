@@ -48,17 +48,21 @@ exports.handler = async (event) => {
 
   if (ticket_types && ticket_types.length > 0) {
     // Capacity is a single shared pool on the event (in people). Each ticket type
-    // consumes `units` people per ticket; its own capacity is set to the event
-    // capacity only to satisfy the NOT NULL column (no longer a binding sub-limit).
-    const typesToInsert = ticket_types.map((t, i) => ({
-      event_id: data.id,
-      name: t.name,
-      price: Math.round(parseFloat(t.price) * 100),
-      capacity: eventCapacity,
-      units: Math.max(1, parseInt(t.units, 10) || 1),
-      sort_order: i,
-      active: true,
-    }));
+    // consumes `units` people per ticket. A type's own `capacity` is an optional
+    // per-type sell cap (e.g. Early Bird = first 20); when no cap is given it is
+    // set to the event capacity so it never binds before the shared pool.
+    const typesToInsert = ticket_types.map((t, i) => {
+      const cap = parseInt(t.cap, 10);
+      return {
+        event_id: data.id,
+        name: t.name,
+        price: Math.round(parseFloat(t.price) * 100),
+        capacity: cap > 0 ? cap : eventCapacity,
+        units: Math.max(1, parseInt(t.units, 10) || 1),
+        sort_order: i,
+        active: true,
+      };
+    });
     await supabase.from('ticket_types').insert(typesToInsert);
   }
 

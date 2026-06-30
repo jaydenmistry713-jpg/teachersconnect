@@ -1213,6 +1213,15 @@
             });
             return rem;
         }
+        // How many tickets of a type can still be bought: bounded by the shared
+        // people pool (people / units) AND the type's own optional sell cap
+        // (e.g. Early Bird). For uncapped types `capacity` equals the event
+        // capacity so the cap term never binds before the pool.
+        function typeAvail(ev, t) {
+            var pplBound = Math.floor(peopleRemaining(ev) / typeUnits(t));
+            var capLeft = (t.capacity || 0) - (t.tickets_sold || 0);
+            return Math.min(pplBound, capLeft);
+        }
 
         function renderEventCard(ev, idx) {
             var theme = CARD_THEMES[idx % CARD_THEMES.length];
@@ -1220,7 +1229,7 @@
             var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
             var rem = peopleRemaining(ev);
             var soldOut = hasTypes
-                ? ev.ticket_types.every(function(t) { return typeUnits(t) > rem; })
+                ? ev.ticket_types.every(function(t) { return typeAvail(ev, t) <= 0; })
                 : rem <= 0;
 
             var mediaInner = ev.image_url
@@ -1240,7 +1249,7 @@
             var ticketsHtml = '';
             if (hasTypes) {
                 ev.ticket_types.forEach(function(tt) {
-                    ticketsHtml += ticketOptHTML(tt.name, tt.price, typeUnits(tt) > rem);
+                    ticketsHtml += ticketOptHTML(tt.name, tt.price, typeAvail(ev, tt) <= 0);
                 });
             } else {
                 ticketsHtml = ticketOptHTML('Ticket', ev.price, false);
@@ -1343,7 +1352,7 @@
             var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
             var rem = peopleRemaining(ev);
             var soldOut = hasTypes
-                ? ev.ticket_types.every(function(t) { return typeUnits(t) > rem; })
+                ? ev.ticket_types.every(function(t) { return typeAvail(ev, t) <= 0; })
                 : rem <= 0;
             var getBtn = document.getElementById('details-get-btn');
             getBtn.style.background = theme.color;
@@ -1425,8 +1434,12 @@
         // Most tickets the buyer can take, bounded by the shared people pool and
         // the selected type's people-per-ticket (capped at 10 per order).
         function maxQty() {
-            var units = checkoutTicketType ? typeUnits(checkoutTicketType) : 1;
-            return Math.max(1, Math.min(10, Math.floor(checkoutRemaining / units)));
+            // For a selected type, bound by what's left of it (pool + its cap);
+            // for single-price events bound by the people pool. Capped at 10/order.
+            var avail = checkoutTicketType
+                ? typeAvail(checkoutEvent, checkoutTicketType)
+                : checkoutRemaining;
+            return Math.max(1, Math.min(10, avail));
         }
         function clampQty() {
             var max = maxQty();
@@ -1470,8 +1483,7 @@
                 ttSection.style.display = 'block';
                 ttOptions.innerHTML = '';
                 checkoutEvent.ticket_types.forEach(function(tt) {
-                    var units = typeUnits(tt);
-                    var maxOfType = Math.floor(checkoutRemaining / units); // how many of this type fit
+                    var maxOfType = typeAvail(checkoutEvent, tt); // how many of this type fit (pool + cap)
                     var soldOut = maxOfType <= 0;
                     var div = document.createElement('div');
                     div.className = 'ticket-type-option' + (soldOut ? ' disabled' : '');
@@ -1493,7 +1505,7 @@
                 });
                 // auto-select first available
                 checkoutTicketType = null;
-                var firstAvail = checkoutEvent.ticket_types.find(function(t) { return typeUnits(t) <= checkoutRemaining; });
+                var firstAvail = checkoutEvent.ticket_types.find(function(t) { return typeAvail(checkoutEvent, t) > 0; });
                 if (firstAvail) {
                     checkoutTicketType = firstAvail;
                     var firstOption = ttOptions.querySelector('.ticket-type-option:not([style*="not-allowed"])');

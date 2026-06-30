@@ -258,7 +258,7 @@
     .toast.error { background: var(--red); }
 
     /* TICKET TYPE ROWS */
-    .ticket-type-row { display:grid; grid-template-columns:1fr 100px 100px 32px; gap:8px; align-items:center; margin-bottom:8px; }
+    .ticket-type-row { display:grid; grid-template-columns:1fr 100px 100px 100px 32px; gap:8px; align-items:center; margin-bottom:8px; }
     .ticket-type-row input { padding:8px 10px; border:1px solid var(--gray-200); border-radius:var(--radius); font-family:inherit; font-size:13px; }
     .ticket-type-row input:focus { outline:none; border-color:var(--teal); }
     .tt-remove { width:32px; height:32px; background:none; border:1px solid var(--gray-200); border-radius:6px; cursor:pointer; color:var(--gray-500); display:flex; align-items:center; justify-content:center; font-size:16px; }
@@ -533,11 +533,12 @@
         <div class="form-row single" style="margin-top:20px;">
           <div class="form-group">
             <label class="form-label" style="margin-bottom:4px;">Ticket Types <span style="color:var(--gray-400);font-weight:400;">(optional — leave empty to use the single price above)</span></label>
-            <span class="form-hint" style="margin-bottom:10px;">Columns: name · price (£) · people per ticket. "People" is how much each ticket draws from the capacity above (Single = 1, Duo = 2).</span>
+            <span class="form-hint" style="margin-bottom:10px;">Columns: name · price (£) · people per ticket · cap. "People" is how much each ticket draws from the capacity above (Single = 1, Duo = 2). "Cap" is an optional limit on how many of this type can sell (e.g. Early Bird = first 20) — leave blank for no limit.</span>
             <div id="ticket-types-list"></div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
               <button type="button" onclick="addTicketTypeRow('Single Ticket','',1)" style="padding:8px 16px;background:rgba(0,138,150,0.1);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--teal);">+ Single Ticket</button>
               <button type="button" onclick="addTicketTypeRow('Duo Ticket','',2)" style="padding:8px 16px;background:rgba(0,138,150,0.1);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--teal);">+ Duo Ticket</button>
+              <button type="button" onclick="addTicketTypeRow('Early Bird','',1,null,'')" style="padding:8px 16px;background:rgba(0,138,150,0.1);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--teal);">+ Early Bird</button>
               <button type="button" onclick="addTicketTypeRow()" style="padding:8px 16px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-700);">+ Custom</button>
             </div>
           </div>
@@ -873,7 +874,10 @@
     }
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('ticket-types-list').innerHTML = '';
-    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.units || 1, t.id));
+    // A type's `capacity` doubles as its optional sell cap; uncapped types store
+    // the event capacity as a placeholder, so only show a cap value when it's a
+    // real (smaller) limit.
+    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.units || 1, t.id, (t.capacity != null && t.capacity < ev.capacity) ? t.capacity : ''));
     renderBundleCheckboxes(ev.id, bundleIdsFromDesc(ev.description));
     document.getElementById('event-modal').classList.add('open');
   }
@@ -1113,10 +1117,13 @@
 
   // `units` = people consumed per ticket from the event's shared capacity pool
   // (Single = 1, Duo = 2, custom default 1).
-  function addTicketTypeRow(name, price, units, id) {
+  // `cap` = optional limit on how many tickets of this type can sell (e.g. an
+  // Early Bird capped at the first 20). Blank = no limit (uncapped).
+  function addTicketTypeRow(name, price, units, id, cap) {
     name = name || '';
     price = price || '';
     units = units || 1;
+    cap = (cap === 0 || cap) ? cap : '';
     var list = document.getElementById('ticket-types-list');
     var row = document.createElement('div');
     row.className = 'ticket-type-row';
@@ -1124,6 +1131,7 @@
     row.innerHTML = '<input type="text" placeholder="Type name (e.g. VIP)" value="' + escAdminHtml(name) + '" class="tt-name">' +
       '<input type="number" placeholder="Price £" step="0.01" min="0" value="' + escAdminHtml(price) + '" class="tt-price">' +
       '<input type="number" placeholder="People" min="1" step="1" title="People per ticket — how much this draws from capacity" value="' + escAdminHtml(units) + '" class="tt-units">' +
+      '<input type="number" placeholder="Cap" min="1" step="1" title="Max tickets of this type to sell (e.g. Early Bird). Leave blank for no limit." value="' + escAdminHtml(cap) + '" class="tt-cap">' +
       '<button type="button" class="tt-remove" onclick="this.parentElement.remove()">×</button>';
     list.appendChild(row);
   }
@@ -1134,6 +1142,7 @@
       name: row.querySelector('.tt-name').value.trim(),
       price: row.querySelector('.tt-price').value,
       units: row.querySelector('.tt-units').value,
+      cap: row.querySelector('.tt-cap').value,
     })).filter(t => t.name && t.price && t.units);
   }
 

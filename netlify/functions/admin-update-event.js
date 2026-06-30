@@ -76,12 +76,15 @@ exports.handler = async (event) => {
       const t = incoming[i];
       const priceInPence = Math.round(parseFloat(t.price) * 100);
       const units = Math.max(1, parseInt(t.units, 10) || 1);
-      // Type capacity tracks the shared event pool (NOT NULL placeholder); the
-      // people-per-ticket weight lives in `units`.
+      // A type's `capacity` is an optional per-type sell cap (e.g. Early Bird);
+      // with no cap it falls back to the event capacity so it never binds before
+      // the shared pool. The people-per-ticket weight lives in `units`.
+      const cap = parseInt(t.cap, 10);
+      const typeCapacity = cap > 0 ? cap : eventCapacity;
       if (t.id && existingIds.has(t.id)) {
         // Update existing type (preserves tickets_sold)
         await supabase.from('ticket_types')
-          .update({ name: t.name, price: priceInPence, capacity: eventCapacity, units, sort_order: i })
+          .update({ name: t.name, price: priceInPence, capacity: typeCapacity, units, sort_order: i })
           .eq('id', t.id);
       } else {
         // Insert new type
@@ -89,7 +92,7 @@ exports.handler = async (event) => {
           event_id: id,
           name: t.name,
           price: priceInPence,
-          capacity: eventCapacity,
+          capacity: typeCapacity,
           units,
           sort_order: i,
           active: true,

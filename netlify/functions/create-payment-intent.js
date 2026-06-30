@@ -54,6 +54,17 @@ exports.handler = async (event) => {
     price = typeData.price;
     units = Math.max(1, parseInt(typeData.units, 10) || 1);
     ticketTypeName = typeData.name;
+    // A ticket type's `capacity` is an optional per-type sell cap (e.g. Early
+    // Bird = first 20). For uncapped types it equals the event capacity and so
+    // never binds before the shared pool. `tickets_sold` counts sold tickets.
+    const typeCapLeft = (typeData.capacity || 0) - (typeData.tickets_sold || 0);
+    if (quantity > typeCapLeft) {
+      const left = Math.max(0, typeCapLeft);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: `Only ${left} ${typeData.name} ticket${left === 1 ? '' : 's'} remaining` }),
+      };
+    }
   } else {
     price = eventData.price;
   }
