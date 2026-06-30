@@ -36,7 +36,10 @@ exports.handler = async (event) => {
     return { statusCode: 404, body: JSON.stringify({ error: 'Event not found' }) };
   }
 
-  let price, remaining, ticketTypeName = null;
+  // Capacity is a single shared pool on the event, measured in PEOPLE. Each
+  // ticket type consumes `units` people per ticket (Single = 1, Duo = 2, custom
+  // default 1); a single-price event consumes 1 person per ticket.
+  let price, units = 1, ticketTypeName = null;
 
   if (ticket_type_id) {
     const { data: typeData, error: typeError } = await supabase
@@ -49,18 +52,41 @@ exports.handler = async (event) => {
       return { statusCode: 404, body: JSON.stringify({ error: 'Ticket type not found' }) };
     }
     price = typeData.price;
-    remaining = typeData.capacity - typeData.tickets_sold;
+    units = Math.max(1, parseInt(typeData.units, 10) || 1);
     ticketTypeName = typeData.name;
   } else {
     price = eventData.price;
-    remaining = eventData.capacity - eventData.tickets_sold;
   }
 
-  if (quantity > remaining) {
+  const people = quantity * units;
+  const eventRemaining = eventData.capacity - eventData.tickets_sold;
+
+  if (people > eventRemaining) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: `Only ${remaining} ticket${remaining === 1 ? '' : 's'} remaining` }),
+      body: JSON.stringify({ error: `Only ${eventRemaining} spot${eventRemaining === 1 ? '' : 's'} remaining` }),
     };
+  }
+
+  // Bundle products ("Summer Series Pass") carry a "[[BUNDLE:id1,id2,...]]" marker
+  // in their description. Buying one reserves one spot per linked event, so each
+  // linked event must have at least `quantity` people remaining.
+  const bundleMatch = String(eventData.description || '').match(/\[\[BUNDLE:([^\]]+)\]\]/);
+  const bundleIds = bundleMatch ? bundleMatch[1].split(',').map(s => s.trim()).filter(Boolean) : [];
+  if (bundleIds.length > 0) {
+    const { data: linked } = await supabase
+      .from('events')
+      .select('id, name, capacity, tickets_sold')
+      .in('id', bundleIds);
+    for (const child of linked || []) {
+      const childRemaining = child.capacity - child.tickets_sold;
+      if (quantity > childRemaining) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: `"${child.name}" only has ${childRemaining} spot${childRemaining === 1 ? '' : 's'} left` }),
+        };
+      }
+    }
   }
 
   const amount = price * quantity;
@@ -75,6 +101,7 @@ exports.handler = async (event) => {
       buyer_email: email,
       buyer_phone: phone,
       quantity: String(quantity),
+      units: String(units),
       ...(ticket_type_id && { ticket_type_id, ticket_type_name: ticketTypeName }),
     },
   });

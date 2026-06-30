@@ -23,6 +23,8 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
   }
 
+  const eventCapacity = parseInt(capacity, 10);
+
   const { data, error } = await supabase
     .from('events')
     .insert({
@@ -31,7 +33,7 @@ exports.handler = async (event) => {
       location,
       description: description || null,
       price: Math.round(parseFloat(price) * 100),
-      capacity: parseInt(capacity, 10),
+      capacity: eventCapacity,
       image_url: image_url || null,
       active: active !== false,
       show_availability: show_availability !== false,
@@ -45,11 +47,15 @@ exports.handler = async (event) => {
   }
 
   if (ticket_types && ticket_types.length > 0) {
+    // Capacity is a single shared pool on the event (in people). Each ticket type
+    // consumes `units` people per ticket; its own capacity is set to the event
+    // capacity only to satisfy the NOT NULL column (no longer a binding sub-limit).
     const typesToInsert = ticket_types.map((t, i) => ({
       event_id: data.id,
       name: t.name,
       price: Math.round(parseFloat(t.price) * 100),
-      capacity: parseInt(t.capacity, 10),
+      capacity: eventCapacity,
+      units: Math.max(1, parseInt(t.units, 10) || 1),
       sort_order: i,
       active: true,
     }));

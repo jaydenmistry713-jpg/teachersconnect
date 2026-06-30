@@ -36,13 +36,17 @@ exports.handler = async (event) => {
     .update({ status: 'paid' })
     .eq('stripe_payment_intent_id', paymentIntent.id);
 
+  // Capacity is a shared pool in people: a ticket consumes `units` people
+  // (Single = 1, Duo = 2, custom default 1), so the event pool drops by qty * units.
+  const units = Math.max(1, parseInt(paymentIntent.metadata.units || '1', 10));
   await supabase.rpc('increment_tickets_sold', {
     event_id_param: event_id,
-    qty_param: qty,
+    qty_param: qty * units,
   });
 
   const { ticket_type_id } = paymentIntent.metadata;
   if (ticket_type_id) {
+    // Per-type tickets_sold tracks the count of tickets of that type (for stats).
     await supabase.rpc('increment_ticket_type_sold', {
       ticket_type_id_param: ticket_type_id,
       qty_param: qty,
@@ -60,6 +64,16 @@ exports.handler = async (event) => {
     .select('date, location, description')
     .eq('id', event_id)
     .single();
+
+  // Bundle products ("[[BUNDLE:id1,id2,...]]") reserve one spot per linked event,
+  // so each linked event's pool drops by the purchased quantity.
+  const bundleMatch = String(eventData && eventData.description || '').match(/\[\[BUNDLE:([^\]]+)\]\]/);
+  if (bundleMatch) {
+    const bundleIds = bundleMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+    for (const childId of bundleIds) {
+      await supabase.rpc('increment_tickets_sold', { event_id_param: childId, qty_param: qty });
+    }
+  }
 
   const bookingRef = ticket ? ticket.id.slice(0, 8).toUpperCase() : paymentIntent.id.slice(-8).toUpperCase();
 

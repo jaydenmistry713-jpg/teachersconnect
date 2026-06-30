@@ -532,9 +532,21 @@
         </div>
         <div class="form-row single" style="margin-top:20px;">
           <div class="form-group">
-            <label class="form-label" style="margin-bottom:12px;">Ticket Types <span style="color:var(--gray-400);font-weight:400;">(optional — leave empty to use the single price above)</span></label>
+            <label class="form-label" style="margin-bottom:4px;">Ticket Types <span style="color:var(--gray-400);font-weight:400;">(optional — leave empty to use the single price above)</span></label>
+            <span class="form-hint" style="margin-bottom:10px;">Columns: name · price (£) · people per ticket. "People" is how much each ticket draws from the capacity above (Single = 1, Duo = 2).</span>
             <div id="ticket-types-list"></div>
-            <button type="button" onclick="addTicketTypeRow()" style="margin-top:10px;padding:8px 16px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-700);">+ Add Ticket Type</button>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+              <button type="button" onclick="addTicketTypeRow('Single Ticket','',1)" style="padding:8px 16px;background:rgba(0,138,150,0.1);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--teal);">+ Single Ticket</button>
+              <button type="button" onclick="addTicketTypeRow('Duo Ticket','',2)" style="padding:8px 16px;background:rgba(0,138,150,0.1);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--teal);">+ Duo Ticket</button>
+              <button type="button" onclick="addTicketTypeRow()" style="padding:8px 16px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-700);">+ Custom</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row single" style="margin-top:20px;">
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom:4px;">Bundle <span style="color:var(--gray-400);font-weight:400;">(optional)</span></label>
+            <span class="form-hint" style="margin-bottom:10px;">Tick events to bundle. Buying this ticket also reserves one spot in each selected event (e.g. a Summer Series Pass covering all 3 events).</span>
+            <div id="bundle-events-list" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
         </div>
         <p class="form-error" id="event-form-error"></p>
@@ -750,6 +762,7 @@
     document.getElementById('f-image-current').style.display = 'none';
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('ticket-types-list').innerHTML = '';
+    renderBundleCheckboxes(null, []);
     document.getElementById('event-modal').classList.add('open');
   }
 
@@ -791,6 +804,47 @@
     return cleaned;
   }
 
+  // ── Bundle-marker helpers ─────────────────────────────────────────────
+  // Linked events live in a "[[BUNDLE:id1,id2,...]]" marker at the start of the
+  // description. The Bundle checkbox list reads/writes it so the admin never
+  // edits the marker by hand (mirrors the [[TIME:...]] convention).
+  function stripBundleMarker(desc) {
+    return String(desc || '').replace(/\[\[BUNDLE:[^\]]*\]\]\s*/, '');
+  }
+  function bundleIdsFromDesc(desc) {
+    const m = String(desc || '').match(/\[\[BUNDLE:([^\]]+)\]\]/);
+    return m ? m[1].split(',').map(s => s.trim()).filter(Boolean) : [];
+  }
+  function applyBundleMarker(desc, ids) {
+    const cleaned = stripBundleMarker(desc);
+    return ids.length ? '[[BUNDLE:' + ids.join(',') + ']]' + cleaned : cleaned;
+  }
+  // Strip every marker the admin manages via dedicated fields, for the textarea.
+  function stripManagedMarkers(desc) {
+    return stripBundleMarker(stripTimeMarker(desc || ''));
+  }
+
+  // Render the bundle checkbox list (all events except the one being edited).
+  function renderBundleCheckboxes(currentId, selectedIds) {
+    const sel = new Set(selectedIds || []);
+    const others = allEvents.filter(e => e.id !== currentId);
+    const list = document.getElementById('bundle-events-list');
+    if (!others.length) {
+      list.innerHTML = '<span style="font-size:13px;color:var(--gray-400);">No other events to bundle yet.</span>';
+      return;
+    }
+    list.innerHTML = others.map(e =>
+      '<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--gray-700);cursor:pointer;">' +
+        '<input type="checkbox" class="bundle-ev" value="' + esc(e.id) + '" ' + (sel.has(e.id) ? 'checked' : '') +
+          ' style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;">' +
+        esc(e.name) +
+      '</label>'
+    ).join('');
+  }
+  function getSelectedBundleIds() {
+    return Array.from(document.querySelectorAll('#bundle-events-list .bundle-ev:checked')).map(c => c.value);
+  }
+
   function openEditModal(id) {
     const ev = allEvents.find(e => e.id === id);
     if (!ev) return;
@@ -803,7 +857,7 @@
     document.getElementById('f-date').value = d.toISOString().slice(0, 16);
     document.getElementById('f-end-time').value = endTimeFromDesc(ev.description);
     document.getElementById('f-location').value = ev.location;
-    document.getElementById('f-description').value = stripTimeMarker(ev.description || '');
+    document.getElementById('f-description').value = stripManagedMarkers(ev.description || '');
     document.getElementById('f-price').value = (ev.price / 100).toFixed(2);
     document.getElementById('f-capacity').value = ev.capacity;
     document.getElementById('f-active').checked = ev.active;
@@ -819,7 +873,8 @@
     }
     document.getElementById('event-form-error').style.display = 'none';
     document.getElementById('ticket-types-list').innerHTML = '';
-    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.capacity, t.id));
+    (ev.ticket_types || []).forEach(t => addTicketTypeRow(t.name, (t.price / 100).toFixed(2), t.units || 1, t.id));
+    renderBundleCheckboxes(ev.id, bundleIdsFromDesc(ev.description));
     document.getElementById('event-modal').classList.add('open');
   }
 
@@ -881,7 +936,8 @@
 
     const startHHMM = (document.getElementById('f-date').value.split('T')[1] || '').slice(0, 5);
     const endHHMM = document.getElementById('f-end-time').value;
-    const description = applyTimeMarker(document.getElementById('f-description').value.trim(), startHHMM, endHHMM);
+    const withTime = applyTimeMarker(document.getElementById('f-description').value.trim(), startHHMM, endHHMM);
+    const description = applyBundleMarker(withTime, getSelectedBundleIds());
 
     const payload = {
       name: document.getElementById('f-name').value.trim(),
@@ -1055,17 +1111,19 @@
 
   function escAdminHtml(str) { return String(str || '').replace(/"/g, '&quot;'); }
 
-  function addTicketTypeRow(name, price, capacity, id) {
+  // `units` = people consumed per ticket from the event's shared capacity pool
+  // (Single = 1, Duo = 2, custom default 1).
+  function addTicketTypeRow(name, price, units, id) {
     name = name || '';
     price = price || '';
-    capacity = capacity || '';
+    units = units || 1;
     var list = document.getElementById('ticket-types-list');
     var row = document.createElement('div');
     row.className = 'ticket-type-row';
     if (id) row.dataset.id = id;
     row.innerHTML = '<input type="text" placeholder="Type name (e.g. VIP)" value="' + escAdminHtml(name) + '" class="tt-name">' +
       '<input type="number" placeholder="Price £" step="0.01" min="0" value="' + escAdminHtml(price) + '" class="tt-price">' +
-      '<input type="number" placeholder="Capacity" min="1" value="' + escAdminHtml(capacity) + '" class="tt-capacity">' +
+      '<input type="number" placeholder="People" min="1" step="1" title="People per ticket — how much this draws from capacity" value="' + escAdminHtml(units) + '" class="tt-units">' +
       '<button type="button" class="tt-remove" onclick="this.parentElement.remove()">×</button>';
     list.appendChild(row);
   }
@@ -1075,8 +1133,8 @@
       id: row.dataset.id || null,
       name: row.querySelector('.tt-name').value.trim(),
       price: row.querySelector('.tt-price').value,
-      capacity: row.querySelector('.tt-capacity').value,
-    })).filter(t => t.name && t.price && t.capacity);
+      units: row.querySelector('.tt-units').value,
+    })).filter(t => t.name && t.price && t.units);
   }
 
   // ── UTILS ─────────────────────────────────────────────────────────────────

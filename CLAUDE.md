@@ -68,7 +68,7 @@ Admin functions are protected by checking `event.headers['x-admin-password'] ===
 Three tables (see `supabase-schema.sql`):
 - `events` — id, name, date, location, description, price (pence), capacity, tickets_sold, image_url, show_availability, active, featured, created_at
 - `tickets` — id, event_id, ticket_type_id (nullable), ticket_type_name (nullable), buyer_name, buyer_email, buyer_phone, quantity, stripe_payment_intent_id, amount_paid (pence), status (pending/paid/refunded), created_at
-- `ticket_types` — id, event_id, name, price (pence), capacity, tickets_sold, active, sort_order, created_at
+- `ticket_types` — id, event_id, name, price (pence), capacity, tickets_sold, **units**, active, sort_order, created_at
 
 **Prices are always stored in pence (integers).** Divide by 100 for display; multiply by 100 when writing. The admin panel converts automatically.
 
@@ -78,7 +78,11 @@ Three tables (see `supabase-schema.sql`):
 
 **`featured`** (BOOLEAN, default false) — controls whether the event appears on the homepage. Non-featured events are only shown on `events.html`. Toggled per-event in the admin panel.
 
-**Ticket types**: events can have zero or more ticket types (e.g. General Admission, VIP). If an event has ticket types, the checkout modal shows a type selector and uses the selected type's price and capacity. If no ticket types exist, the event's single price/capacity is used (backwards compatible).
+**Ticket types**: events can have zero or more ticket types (e.g. General Admission, VIP). If an event has ticket types, the checkout modal shows a type selector and uses the selected type's price. If no ticket types exist, the event's single price is used (backwards compatible).
+
+**Shared-pool capacity (`units`).** `events.capacity` is a single shared pool measured in **people**, and `events.tickets_sold` counts people consumed. Each ticket type has a `units` integer (people per ticket): **Single = 1, Duo = 2, custom default 1**. The admin form ships hardcoded **+ Single Ticket / + Duo Ticket** preset buttons (plus **+ Custom**), and the ticket-type row's third box is **People** (the `units` value), not a per-type capacity. A purchase of `quantity` tickets of a type consumes `quantity * units` people: `create-payment-intent` validates `quantity * units <= (event.capacity - event.tickets_sold)`, and `stripe-webhook` increments `events.tickets_sold` by `quantity * units` (passing `units` in PaymentIntent metadata). `ticket_types.capacity` is **no longer a binding sub-limit** — the admin functions set it to the event capacity only to satisfy the NOT NULL column; `ticket_types.tickets_sold` is still incremented by ticket *count* for stats. Front-end availability (`events.html`) derives everything from the event pool via `peopleRemaining(ev)` / `typeUnits(t)`: a type is unavailable when `units > remaining`, and the per-type "X left" in the checkout modal is `floor(remaining / units)`. **Do not reintroduce per-type capacity checks** (`t.capacity - t.tickets_sold`) — they were removed in favour of the shared pool.
+
+**Bundle products (`[[BUNDLE:...]]`).** A bundle (e.g. the "Summer Series Pass", £75) is an ordinary single-price event whose `description` carries a `[[BUNDLE:<id1>,<id2>,...]]` marker listing the events it covers. Buying the bundle **reserves one spot per linked event**: `create-payment-intent` validates each linked event has `>= quantity` people remaining, and `stripe-webhook` increments each linked event's `tickets_sold` by `quantity` (in addition to the bundle event's own pool). The linkage lives entirely in the marker — **no DB column and no Stripe dashboard change**. The admin manages it via the **Bundle** checkbox list (`#bundle-events-list`), mirroring the `[[TIME:...]]` pattern: `bundleIdsFromDesc()` reads it on edit, `applyBundleMarker()` writes it on save, and `stripManagedMarkers()` (TIME + BUNDLE) cleans the textarea. The marker is stripped from all visible text by `splitDescription()` (events.html), `cardBlurb()` (index.html), and the webhook email logic. On `events.html`, `peopleRemaining()` for a bundle is also bounded by the tightest linked event, so the bundle shows "Sold Out" once any linked event fills.
 
 **Ticket type update strategy** (`admin-update-event`): ticket types are synced, not replaced. Existing rows are updated in place (preserving `tickets_sold`), new rows are inserted, and removed rows are deleted — but only after first nullifying `tickets.ticket_type_id` references to avoid a FK constraint violation. The admin UI tracks each ticket type's DB `id` via a `data-id` attribute on the row element so the backend can distinguish updates from new inserts. **Do not revert to delete-all + insert-all** — that pattern silently fails the DELETE when purchased tickets reference a ticket type, causing duplicates on every save.
 
@@ -105,7 +109,7 @@ Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-
 ### Admin panel — `/admin/index.html`
 
 Single-page admin app. Password stored in `sessionStorage` after login and sent as `x-admin-password` header on every API call. Two tabs:
-- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/start time, end time (optional — drives the displayed time range via the `[[TIME:...]]` description marker; see the events-grid notes), image upload, location, description, price, capacity, active toggle, show-availability toggle, featured toggle, ticket types section (add/remove rows with name/price/capacity). Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event.
+- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/start time, end time (optional — drives the displayed time range via the `[[TIME:...]]` description marker; see the events-grid notes), image upload, location, description, price, capacity, active toggle, show-availability toggle, featured toggle, ticket types section (add/remove rows with name/price/**people-per-ticket**, via **+ Single Ticket / + Duo Ticket / + Custom** preset buttons), and a **Bundle** checkbox list (tick events this ticket also reserves a spot in — writes the `[[BUNDLE:...]]` marker). Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event.
 - **Tickets** — filterable by event, full CSV export of all tickets
 
 **Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved.
@@ -174,6 +178,7 @@ The Stripe **publishable key** (`pk_live_`) is hardcoded in `index.html` and `ev
 - [x] Update owner notification `to` address to `edwin@theteachersconnect.com`
 - [ ] Point `theteachersconnect.com` DNS to this Netlify site
 - [ ] Run Supabase SQL migrations for `featured`, `ticket_types`, `ticket_type_id`/`ticket_type_name` on tickets
+- [ ] Run Supabase SQL migration `ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS units INTEGER DEFAULT 1;` (shared-pool people-per-ticket; see `supabase-schema.sql`). Bundle products need no migration — the `[[BUNDLE:...]]` linkage lives in the description.
 
 ## Trustpilot reviews section
 

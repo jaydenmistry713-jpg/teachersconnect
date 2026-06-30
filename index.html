@@ -2130,7 +2130,7 @@
         // Show only the short blurb on cards: drop the [[TIME:...]] marker and
         // anything after the [[DETAILS]] delimiter (matches the events page).
         function cardBlurb(desc) {
-            var text = String(desc || '').replace(/\[\[TIME:[^\]]*\]\]/, '');
+            var text = String(desc || '').replace(/\[\[TIME:[^\]]*\]\]/, '').replace(/\[\[BUNDLE:[^\]]*\]\]/, '');
             var idx = text.indexOf('[[DETAILS]]');
             if (idx !== -1) text = text.slice(0, idx);
             return text.trim();

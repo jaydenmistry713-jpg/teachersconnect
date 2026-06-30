@@ -67,3 +67,18 @@ CREATE OR REPLACE FUNCTION increment_ticket_type_sold(ticket_type_id_param UUID,
 RETURNS void AS $$
   UPDATE ticket_types SET tickets_sold = tickets_sold + qty_param WHERE id = ticket_type_id_param;
 $$ LANGUAGE sql;
+
+-- ── People-per-ticket (shared-pool capacity) ─────────────────────────────────
+-- The event's `capacity` is a single shared pool measured in PEOPLE. Each ticket
+-- type consumes `units` people per ticket (Single = 1, Duo = 2, custom default 1),
+-- so events.tickets_sold is incremented by quantity * units on a paid purchase.
+-- The ticket_types.capacity column is retained (NOT NULL) but is no longer a
+-- binding sub-limit — admin-create/update-event set it to the event capacity.
+ALTER TABLE ticket_types ADD COLUMN IF NOT EXISTS units INTEGER DEFAULT 1;
+
+-- ── Bundle products (e.g. "Summer Series Pass") ──────────────────────────────
+-- A bundle is an ordinary event row whose description carries a
+-- "[[BUNDLE:<id1>,<id2>,...]]" marker listing the events it covers. Buying the
+-- bundle reserves one spot per linked event: the webhook increments each linked
+-- event's tickets_sold by the purchased quantity. No schema change is required —
+-- the linkage lives in the description marker, managed by the admin Bundle field.

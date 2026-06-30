@@ -1150,6 +1150,7 @@
         var checkoutEvent = null;
         var checkoutQty = 1;
         var checkoutTicketType = null;
+        var checkoutRemaining = 0; // people still bookable for the open event
         var stripeInstance = null;
         var stripeElements = null;
 
@@ -1194,13 +1195,33 @@
             return /duo|two|couple|pair|\(2\)|x\s*2|×\s*2/i.test(String(name || '')) ? ICON_DUO : ICON_SINGLE;
         }
 
+        // ── Shared-pool capacity helpers ──────────────────────────────────────
+        // Capacity is a single pool on the event, measured in people. Each ticket
+        // type consumes `units` people per ticket (Single = 1, Duo = 2, default 1).
+        function typeUnits(t) { return Math.max(1, parseInt(t && t.units, 10) || 1); }
+        function bundleIds(ev) {
+            var m = String(ev && ev.description || '').match(/\[\[BUNDLE:([^\]]+)\]\]/);
+            return m ? m[1].split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+        }
+        // People still bookable for this event. For a bundle, also bounded by the
+        // tightest linked event (each pass reserves one spot per linked event).
+        function peopleRemaining(ev) {
+            var rem = ev.capacity - ev.tickets_sold;
+            bundleIds(ev).forEach(function(id) {
+                var child = loadedEvents.find(function(e) { return e.id === id; });
+                if (child) rem = Math.min(rem, child.capacity - child.tickets_sold);
+            });
+            return rem;
+        }
+
         function renderEventCard(ev, idx) {
             var theme = CARD_THEMES[idx % CARD_THEMES.length];
             var date = formatDate(ev.date);
             var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
+            var rem = peopleRemaining(ev);
             var soldOut = hasTypes
-                ? ev.ticket_types.every(function(t) { return (t.capacity - t.tickets_sold) <= 0; })
-                : (ev.capacity - ev.tickets_sold) <= 0;
+                ? ev.ticket_types.every(function(t) { return typeUnits(t) > rem; })
+                : rem <= 0;
 
             var mediaInner = ev.image_url
                 ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '">'
@@ -1219,7 +1240,7 @@
             var ticketsHtml = '';
             if (hasTypes) {
                 ev.ticket_types.forEach(function(tt) {
-                    ticketsHtml += ticketOptHTML(tt.name, tt.price, (tt.capacity - tt.tickets_sold) <= 0);
+                    ticketsHtml += ticketOptHTML(tt.name, tt.price, typeUnits(tt) > rem);
                 });
             } else {
                 ticketsHtml = ticketOptHTML('Ticket', ev.price, false);
@@ -1265,6 +1286,7 @@
             var text = String(desc || '');
             var timeRange = '';
             text = text.replace(/\[\[TIME:([^\]]+)\]\]/, function(_, t) { timeRange = t.trim(); return ''; });
+            text = text.replace(/\[\[BUNDLE:[^\]]*\]\]/, '');
             var idx = text.indexOf('[[DETAILS]]');
             if (idx === -1) return { blurb: text.trim(), full: '', timeRange: timeRange };
             return { blurb: text.slice(0, idx).trim(), full: text.slice(idx + 11).trim(), timeRange: timeRange };
@@ -1319,9 +1341,10 @@
             document.getElementById('details-body').innerHTML = renderDetailsBody(parsed.full || parsed.blurb);
 
             var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
+            var rem = peopleRemaining(ev);
             var soldOut = hasTypes
-                ? ev.ticket_types.every(function(t) { return (t.capacity - t.tickets_sold) <= 0; })
-                : (ev.capacity - ev.tickets_sold) <= 0;
+                ? ev.ticket_types.every(function(t) { return typeUnits(t) > rem; })
+                : rem <= 0;
             var getBtn = document.getElementById('details-get-btn');
             getBtn.style.background = theme.color;
             getBtn.disabled = soldOut;
@@ -1399,6 +1422,20 @@
             document.getElementById('checkout-total-price').textContent = formatPrice(total);
         }
 
+        // Most tickets the buyer can take, bounded by the shared people pool and
+        // the selected type's people-per-ticket (capped at 10 per order).
+        function maxQty() {
+            var units = checkoutTicketType ? typeUnits(checkoutTicketType) : 1;
+            return Math.max(1, Math.min(10, Math.floor(checkoutRemaining / units)));
+        }
+        function clampQty() {
+            var max = maxQty();
+            if (checkoutQty > max) {
+                checkoutQty = max;
+                document.getElementById('qty-display').textContent = checkoutQty;
+            }
+        }
+
         function buildSummaryHTML(ev, qty) {
             var date = formatDate(ev.date);
             var price = checkoutTicketType ? checkoutTicketType.price : ev.price;
@@ -1416,6 +1453,7 @@
             if (!checkoutEvent) return;
             checkoutQty = 1;
             checkoutTicketType = null;
+            checkoutRemaining = peopleRemaining(checkoutEvent);
 
             // Reset form
             document.getElementById('co-name').value = '';
@@ -1432,20 +1470,22 @@
                 ttSection.style.display = 'block';
                 ttOptions.innerHTML = '';
                 checkoutEvent.ticket_types.forEach(function(tt) {
-                    var remaining = tt.capacity - tt.tickets_sold;
-                    var soldOut = remaining <= 0;
+                    var units = typeUnits(tt);
+                    var maxOfType = Math.floor(checkoutRemaining / units); // how many of this type fit
+                    var soldOut = maxOfType <= 0;
                     var div = document.createElement('div');
                     div.className = 'ticket-type-option' + (soldOut ? ' disabled' : '');
                     div.style.opacity = soldOut ? '0.5' : '1';
                     div.style.cursor = soldOut ? 'not-allowed' : 'pointer';
                     div.innerHTML = '<div><div class="ticket-type-option-name">' + escHtml(tt.name) + '</div>' +
-                        '<div class="ticket-type-option-avail">' + (soldOut ? 'Sold out' : (checkoutEvent.show_availability !== false ? remaining + ' left' : '')) + '</div></div>' +
+                        '<div class="ticket-type-option-avail">' + (soldOut ? 'Sold out' : (checkoutEvent.show_availability !== false ? maxOfType + ' left' : '')) + '</div></div>' +
                         '<div class="ticket-type-option-price">£' + (tt.price / 100).toFixed(2) + '</div>';
                     if (!soldOut) {
                         div.addEventListener('click', function() {
                             document.querySelectorAll('.ticket-type-option').forEach(function(o) { o.classList.remove('selected'); });
                             div.classList.add('selected');
                             checkoutTicketType = tt;
+                            clampQty();
                             updateTotal();
                         });
                     }
@@ -1453,7 +1493,7 @@
                 });
                 // auto-select first available
                 checkoutTicketType = null;
-                var firstAvail = checkoutEvent.ticket_types.find(function(t) { return t.capacity - t.tickets_sold > 0; });
+                var firstAvail = checkoutEvent.ticket_types.find(function(t) { return typeUnits(t) <= checkoutRemaining; });
                 if (firstAvail) {
                     checkoutTicketType = firstAvail;
                     var firstOption = ttOptions.querySelector('.ticket-type-option:not([style*="not-allowed"])');
@@ -1496,10 +1536,7 @@
             }
         });
         document.getElementById('qty-plus').addEventListener('click', function() {
-            var remaining = checkoutTicketType
-                ? checkoutTicketType.capacity - checkoutTicketType.tickets_sold
-                : (checkoutEvent ? checkoutEvent.capacity - checkoutEvent.tickets_sold : 10);
-            if (checkoutQty < Math.min(10, remaining)) {
+            if (checkoutQty < maxQty()) {
                 checkoutQty++;
                 document.getElementById('qty-display').textContent = checkoutQty;
                 updateTotal();

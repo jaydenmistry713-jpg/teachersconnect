@@ -27,7 +27,7 @@ exports.handler = async (event) => {
     const eventIds = events.map(e => e.id);
     const { data: ticketTypes } = await supabase
       .from('ticket_types')
-      .select('id, event_id, name, price, capacity, tickets_sold, sort_order')
+      .select('id, event_id, name, price, capacity, tickets_sold, units, sort_order')
       .in('event_id', eventIds)
       .eq('active', true)
       .order('sort_order', { ascending: true });

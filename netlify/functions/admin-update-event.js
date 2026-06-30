@@ -23,12 +23,14 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Event ID required' }) };
   }
 
+  const eventCapacity = parseInt(capacity, 10);
+
   const updates = {
     name,
     date,
     location,
     description: description || null,
-    capacity: parseInt(capacity, 10),
+    capacity: eventCapacity,
     image_url: image_url !== undefined ? image_url : null,
     active,
     show_availability: show_availability !== false,
@@ -73,12 +75,13 @@ exports.handler = async (event) => {
     for (let i = 0; i < incoming.length; i++) {
       const t = incoming[i];
       const priceInPence = Math.round(parseFloat(t.price) * 100);
-      const cap = parseInt(t.capacity, 10);
-
+      const units = Math.max(1, parseInt(t.units, 10) || 1);
+      // Type capacity tracks the shared event pool (NOT NULL placeholder); the
+      // people-per-ticket weight lives in `units`.
       if (t.id && existingIds.has(t.id)) {
         // Update existing type (preserves tickets_sold)
         await supabase.from('ticket_types')
-          .update({ name: t.name, price: priceInPence, capacity: cap, sort_order: i })
+          .update({ name: t.name, price: priceInPence, capacity: eventCapacity, units, sort_order: i })
           .eq('id', t.id);
       } else {
         // Insert new type
@@ -86,7 +89,8 @@ exports.handler = async (event) => {
           event_id: id,
           name: t.name,
           price: priceInPence,
-          capacity: cap,
+          capacity: eventCapacity,
+          units,
           sort_order: i,
           active: true,
         });
