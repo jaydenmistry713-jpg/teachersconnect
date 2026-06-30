@@ -496,8 +496,12 @@
         .decor-5 { bottom: 90px;  right: 60px; width: 110px; height: 110px; color: #689832; opacity: 0.13; transform: rotate(-12deg); }
         .decor-6 { top: 760px; left: 70px;  width: 64px;  height: 64px;  color: #D17219; opacity: 0.12; transform: rotate(8deg); }
         @media (max-width: 900px) {
+            /* On mobile the cards are full-width, so move decorations into the
+               side gutters and the top/bottom padding where they stay visible */
             .decor-2, .decor-4, .decor-6 { display: none; }
-            .summer-decor .decor { opacity: 0.09 !important; }
+            .decor-1 { top: auto; bottom: 34px; left: 12px; width: 66px; height: 66px; opacity: 0.5; transform: rotate(-18deg); }
+            .decor-3 { top: 14px; right: 14px; left: auto; width: 54px; height: 54px; opacity: 0.5; }
+            .decor-5 { top: 42%; right: 1px; left: auto; bottom: auto; width: 42px; height: 42px; opacity: 0.42; transform: rotate(12deg); }
         }
 
         /* Community banner */
@@ -579,10 +583,12 @@
         .details-get:disabled { background: var(--gray-300) !important; color: var(--gray-500); cursor: not-allowed; }
 
         @media (max-width: 900px) {
-            .event-row { grid-template-columns: 1fr; }
-            .event-row-media { min-height: 200px; aspect-ratio: 16/10; }
-            .event-row-body { padding: var(--space-lg); }
-            .event-row-tickets { border-left: none; border-top: 1px solid var(--gray-100); padding: var(--space-lg); }
+            /* minmax(0,1fr) stops the image's aspect-ratio min-width from widening the
+               grid track and clipping the card content (titles/prices) on narrow screens */
+            .event-row { grid-template-columns: minmax(0, 1fr); }
+            .event-row-media { aspect-ratio: auto; min-height: 0; height: 200px; min-width: 0; }
+            .event-row-body { padding: var(--space-lg); min-width: 0; }
+            .event-row-tickets { border-left: none; border-top: 1px solid var(--gray-100); padding: var(--space-lg); min-width: 0; }
             .community-banner { justify-content: center; text-align: left; }
         }
 
