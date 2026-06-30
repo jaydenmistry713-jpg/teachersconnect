@@ -368,6 +368,128 @@
             border-radius: var(--radius-full);
         }
 
+        /* ==================== SUMMER SERIES HERO ==================== */
+        .summer-hero {
+            position: relative;
+            overflow: hidden;
+            background: #FBF5EC;
+            padding: calc(110px + var(--space-3xl)) var(--space-2xl) var(--space-4xl);
+            text-align: center;
+        }
+        .summer-hero-blob {
+            position: absolute; top: -140px; right: -120px;
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, #F6D9C4 0%, #F9E6D7 55%, rgba(249,230,215,0) 72%);
+            border-radius: 50%; z-index: 0;
+        }
+        .summer-hero-leaf {
+            position: absolute; top: 30px; left: -24px;
+            font-size: 130px; line-height: 1; transform: rotate(-18deg);
+            opacity: 0.16; z-index: 0; user-select: none;
+        }
+        .summer-hero-dots {
+            position: absolute; top: 150px; right: 70px;
+            width: 96px; height: 56px; z-index: 0; opacity: 0.45;
+            background-image: radial-gradient(#B7AE9E 2px, transparent 2px);
+            background-size: 15px 15px;
+        }
+        .summer-hero-inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+        .summer-eyebrow { display: inline-flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
+        .summer-eyebrow .eyebrow-line { width: 32px; height: 2px; background: #D17219; border-radius: var(--radius-full); }
+        .summer-eyebrow span { font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #B5926A; }
+        .summer-title {
+            font-family: var(--font-accent); font-weight: 700;
+            font-size: clamp(40px, 8vw, 78px); line-height: 1.02;
+            letter-spacing: 0.01em; text-transform: uppercase;
+            color: #2F5E26; margin-bottom: var(--space-sm);
+        }
+        .summer-subtitle {
+            font-family: var(--font-accent); font-style: italic;
+            font-size: clamp(22px, 4.2vw, 34px); color: #D17219;
+            margin-bottom: var(--space-xl);
+        }
+        .summer-intro {
+            font-size: clamp(15px, 2vw, 18px); line-height: 1.75;
+            color: var(--gray-600); max-width: 540px; margin: 0 auto;
+        }
+
+        /* ==================== EVENT ROWS (Summer Series) ==================== */
+        .events-stack { display: flex; flex-direction: column; gap: var(--space-xl); max-width: 1080px; margin: 0 auto; }
+        .event-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 280px 1fr 232px;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--duration-normal) var(--ease-out-expo), box-shadow var(--duration-normal);
+        }
+        .event-row:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+        .event-row-media { position: relative; min-height: 250px; background: var(--gray-100); }
+        .event-row-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .event-row-media .media-placeholder { position: absolute; inset: 0; }
+        .event-row-badge {
+            position: absolute; top: 16px; left: 16px;
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--white);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.22); z-index: 2;
+        }
+        .event-row-body { padding: var(--space-xl) var(--space-lg); display: flex; flex-direction: column; justify-content: center; }
+        .event-row-title { font-family: var(--font-body); font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: var(--space-md); }
+        .event-row-meta { display: flex; flex-direction: column; gap: 7px; margin-bottom: var(--space-md); }
+        .event-row-meta-item { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--gray-600); font-weight: 500; }
+        .event-row-meta-item svg { flex-shrink: 0; color: var(--gray-400); }
+        .event-row-desc { font-size: 13.5px; line-height: 1.6; color: var(--gray-500); margin: 0; }
+        .event-row-tickets { padding: var(--space-xl) var(--space-lg); border-left: 1px solid var(--gray-100); display: flex; flex-direction: column; }
+        .event-row-tickets-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: var(--space-md); }
+        .ticket-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 8px; }
+        .ticket-opt-name { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+        .ticket-opt-price { font-size: 16px; font-weight: 800; }
+        .event-row-get {
+            margin-top: auto; width: 100%; padding: 13px;
+            border: none; border-radius: var(--radius-full);
+            color: var(--white); font-family: var(--font-body);
+            font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: filter var(--duration-normal), transform var(--duration-normal);
+        }
+        .event-row-get:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
+        .event-row-get:disabled { background: var(--gray-300) !important; color: var(--gray-500); cursor: not-allowed; }
+
+        /* Community banner */
+        .community-banner {
+            max-width: 1080px; margin: 0 auto;
+            background: #FBF5EC; border-radius: var(--radius-xl);
+            padding: var(--space-xl) var(--space-2xl);
+            display: flex; align-items: center; justify-content: space-between;
+            gap: var(--space-xl); flex-wrap: wrap;
+        }
+        .community-banner-text { display: flex; align-items: center; gap: 16px; }
+        .community-banner-heart {
+            width: 46px; height: 46px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #D17219; border-radius: 50%; color: #D17219;
+        }
+        .community-banner-text p { font-size: 15px; color: var(--gray-600); max-width: 540px; margin: 0; line-height: 1.6; }
+        .community-banner-btn {
+            background: #2F5E26; color: var(--white);
+            padding: 13px 26px; border-radius: var(--radius-full);
+            font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+            white-space: nowrap; transition: filter var(--duration-normal), transform var(--duration-normal);
+        }
+        .community-banner-btn:hover { filter: brightness(1.12); transform: translateY(-2px); }
+
+        @media (max-width: 900px) {
+            .event-row { grid-template-columns: 1fr; }
+            .event-row-media { min-height: 200px; aspect-ratio: 16/10; }
+            .event-row-body { padding: var(--space-lg); }
+            .event-row-tickets { border-left: none; border-top: 1px solid var(--gray-100); padding: var(--space-lg); }
+            .community-banner { justify-content: center; text-align: left; }
+        }
+
         /* ==================== FOOTER ==================== */
         .footer { background: var(--gray-950); }
         .footer-top { padding: var(--space-4xl) var(--space-2xl); }
@@ -634,20 +756,20 @@
 
     <main>
         <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-bg">
-                <div class="hero-grid"></div>
-            </div>
-            <div style="position: relative; z-index: 1; width: 100%; max-width: 1280px; margin: 0 auto; text-align: center;">
-                <div class="hero-eyebrow" data-animate="fade-up">
+        <section class="summer-hero">
+            <div class="summer-hero-blob"></div>
+            <div class="summer-hero-leaf">🌿</div>
+            <div class="summer-hero-dots"></div>
+            <div class="summer-hero-inner">
+                <div class="summer-eyebrow" data-animate="fade-up">
                     <div class="eyebrow-line"></div>
-                    <span>All Events</span>
+                    <span>Teachers Connect</span>
+                    <div class="eyebrow-line"></div>
                 </div>
-                <h1 data-animate="fade-up" data-delay="0.1" style="font-family: var(--font-body); font-size: clamp(40px, 6vw, 72px); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--gray-900); margin-bottom: var(--space-lg);">
-                    <span style="color: #008A96;">Upcoming Events</span>
-                </h1>
-                <p data-animate="fade-up" data-delay="0.2" style="font-size: 18px; line-height: 1.7; color: var(--gray-600); max-width: 600px; margin: 0 auto;">
-                    Browse and book tickets for all upcoming Teachers Connect events. We'd love to see you there.
+                <h1 class="summer-title" data-animate="fade-up" data-delay="0.1">Summer Series 2026</h1>
+                <p class="summer-subtitle" data-animate="fade-up" data-delay="0.15">Connect. Unwind. Have Fun. ♡</p>
+                <p class="summer-intro" data-animate="fade-up" data-delay="0.2">
+                    Three unforgettable events. One amazing community. Join us this summer for exciting experiences, good vibes and even better company.
                 </p>
             </div>
         </section>
@@ -664,25 +786,18 @@
             </div>
         </section>
 
-        <!-- Instagram CTA -->
-        <section style="background: var(--gray-50); padding: var(--space-4xl) var(--space-2xl);">
-            <div style="max-width: 700px; margin: 0 auto; text-align: center;">
-                <h2 style="font-family: var(--font-body); font-size: clamp(28px, 4vw, 40px); font-weight: 800; color: var(--gray-900); margin-bottom: var(--space-lg);">
-                    Can't find what you're looking for?
-                </h2>
-                <p style="font-size: 17px; color: var(--gray-600); margin-bottom: var(--space-2xl); line-height: 1.7;">
-                    Follow us on Instagram for the latest event announcements, behind-the-scenes content, and early access to tickets.
-                </p>
-                <a href="https://www.instagram.com/theteachersconnect/" target="_blank" class="btn btn-outline btn-large">
-                    <span class="btn-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="20" rx="5"/>
-                            <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
-                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        <!-- Community Banner -->
+        <section style="background: var(--white); padding: 0 var(--space-2xl) var(--space-5xl);">
+            <div class="community-banner" data-animate="fade-up">
+                <div class="community-banner-text">
+                    <div class="community-banner-heart">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
                         </svg>
-                    </span>
-                    <span class="btn-text">Follow @theteachersconnect</span>
-                </a>
+                    </div>
+                    <p>Bring a friend, make new ones and be part of a community that celebrates, supports and uplifts educators.</p>
+                </div>
+                <a href="https://www.instagram.com/theteachersconnect/" target="_blank" class="community-banner-btn">Join the Community</a>
             </div>
         </section>
     </main>
@@ -908,11 +1023,14 @@
         // ── FETCH & RENDER EVENTS ─────────────────────────────────────────────
         function formatDate(isoString) {
             var d = new Date(isoString);
+            var dateLong = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+            var time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
             return {
                 day: d.toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }),
                 month: d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase(),
-                full: d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) +
-                      ' at ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+                dateLong: dateLong,
+                time: time,
+                full: dateLong + ' at ' + time
             };
         }
 
@@ -922,51 +1040,72 @@
 
         function formatPrice(pence) { return '£' + (pence / 100).toFixed(2); }
 
-        function renderEventCard(ev) {
-            var remaining = ev.capacity - ev.tickets_sold;
-            var soldOut = remaining <= 0;
+        // Per-card themes cycle by event order (matches the Summer Series look).
+        // The Nth event added in the CMS gets the Nth theme below.
+        var CARD_THEMES = [
+            { color: '#2F5E26', tint: 'rgba(104,152,50,0.12)', emoji: '🥾' }, // green
+            { color: '#B33127', tint: 'rgba(179,49,39,0.10)',  emoji: '🥂' }, // red
+            { color: '#C2891C', tint: 'rgba(209,151,30,0.14)', emoji: '🏅' }, // gold/orange
+            { color: '#008A96', tint: 'rgba(0,138,150,0.10)',  emoji: '🎉' }, // teal
+            { color: '#451E5B', tint: 'rgba(69,30,91,0.10)',   emoji: '✨' }  // purple
+        ];
+
+        var ICON_CAL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+        var ICON_PIN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        var ICON_CLOCK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+        var ICON_ARROW = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+
+        function renderEventCard(ev, idx) {
+            var theme = CARD_THEMES[idx % CARD_THEMES.length];
             var date = formatDate(ev.date);
-            var priceLabel;
-            if (ev.ticket_types && ev.ticket_types.length > 0) {
-                var prices = ev.ticket_types.map(function(t) { return t.price; });
-                var minPrice = Math.min.apply(null, prices);
-                var maxPrice = Math.max.apply(null, prices);
-                priceLabel = minPrice === maxPrice ? '£' + (minPrice / 100).toFixed(2) : 'From £' + (minPrice / 100).toFixed(2);
+            var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
+            var soldOut = hasTypes
+                ? ev.ticket_types.every(function(t) { return (t.capacity - t.tickets_sold) <= 0; })
+                : (ev.capacity - ev.tickets_sold) <= 0;
+
+            var mediaInner = ev.image_url
+                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '">'
+                : '<div class="media-placeholder" style="background:linear-gradient(135deg,' + theme.color + ',rgba(0,0,0,0.45));"></div>';
+
+            // Ticket option preview boxes (selection still happens in the checkout modal)
+            var ticketsHtml = '';
+            if (hasTypes) {
+                ev.ticket_types.forEach(function(tt) {
+                    var ttSold = (tt.capacity - tt.tickets_sold) <= 0;
+                    ticketsHtml += '<div class="ticket-opt" style="background:' + theme.tint + ';' + (ttSold ? 'opacity:0.5;' : '') + '">' +
+                        '<span class="ticket-opt-name">' + escHtml(tt.name) + '</span>' +
+                        '<span class="ticket-opt-price" style="color:' + theme.color + ';">' + formatPrice(tt.price) + '</span>' +
+                    '</div>';
+                });
             } else {
-                priceLabel = '£' + (ev.price / 100).toFixed(2);
-            }
-            var btnLabel = soldOut ? 'Sold Out' : 'Buy Tickets — ' + priceLabel;
-
-            var imageHtml = ev.image_url
-                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">'
-                : '<div class="card-image-bg" style="position:absolute;inset:0;background:linear-gradient(135deg,var(--primary-500),var(--primary-700));"></div>';
-
-            var availBadge = '';
-            if (ev.show_availability !== false) {
-                if (remaining > 0 && remaining <= 20) {
-                    availBadge = '<span class="card-status" style="background:#FEF3C7;color:#D97706;">' + remaining + ' left</span>';
-                } else if (soldOut) {
-                    availBadge = '<span class="card-status" style="background:var(--gray-100);color:var(--gray-500);">Sold out</span>';
-                }
+                ticketsHtml = '<div class="ticket-opt" style="background:' + theme.tint + ';">' +
+                    '<span class="ticket-opt-name">Ticket</span>' +
+                    '<span class="ticket-opt-price" style="color:' + theme.color + ';">' + formatPrice(ev.price) + '</span>' +
+                '</div>';
             }
 
-            return '<div class="event-card" data-animate="fade-up">' +
-                '<div class="event-card-inner">' +
-                    '<div class="event-card-image">' + imageHtml + '</div>' +
-                    '<div class="event-card-content">' +
-                        '<div class="card-date">' +
-                            '<span class="date-num">' + date.day + '</span>' +
-                            '<span class="date-month">' + date.month + '</span>' +
-                        '</div>' +
-                        '<div class="card-title">' + escHtml(ev.name) + '</div>' +
-                        '<div class="card-excerpt">' + escHtml(ev.description || ev.location) + '</div>' +
-                        '<div class="card-footer">' +
-                            '<span class="card-location">' + escHtml(ev.location) + '</span>' +
-                            availBadge +
-                        '</div>' +
-                        '<button class="btn-buy-ticket" ' + (soldOut ? 'disabled' : '') +
-                            ' onclick="openCheckout(\'' + ev.id + '\')">' + btnLabel + '</button>' +
+            var descHtml = ev.description ? '<p class="event-row-desc">' + escHtml(ev.description) + '</p>' : '';
+
+            return '<div class="event-row" data-animate="fade-up">' +
+                '<div class="event-row-media">' + mediaInner +
+                    '<div class="event-row-badge" style="background:' + theme.color + ';">' + theme.emoji + '</div>' +
+                '</div>' +
+                '<div class="event-row-body">' +
+                    '<h3 class="event-row-title" style="color:' + theme.color + ';">' + escHtml(ev.name) + '</h3>' +
+                    '<div class="event-row-meta">' +
+                        '<div class="event-row-meta-item">' + ICON_CAL + '<span>' + date.dateLong + '</span></div>' +
+                        '<div class="event-row-meta-item">' + ICON_PIN + '<span>' + escHtml(ev.location) + '</span></div>' +
+                        '<div class="event-row-meta-item">' + ICON_CLOCK + '<span>' + date.time + '</span></div>' +
                     '</div>' +
+                    descHtml +
+                '</div>' +
+                '<div class="event-row-tickets">' +
+                    '<div class="event-row-tickets-label">Ticket Options</div>' +
+                    ticketsHtml +
+                    '<button class="event-row-get" ' + (soldOut ? 'disabled' : '') +
+                        ' style="background:' + theme.color + ';" onclick="openCheckout(\'' + ev.id + '\')">' +
+                        (soldOut ? 'Sold Out' : 'Get Tickets ' + ICON_ARROW) +
+                    '</button>' +
                 '</div>' +
             '</div>';
         }
@@ -980,8 +1119,8 @@
                     '</div>';
                 return;
             }
-            var grid = '<div class="events-grid">';
-            events.forEach(function(ev) { grid += renderEventCard(ev); });
+            var grid = '<div class="events-stack">';
+            events.forEach(function(ev, i) { grid += renderEventCard(ev, i); });
             grid += '</div>';
             container.innerHTML = grid;
 

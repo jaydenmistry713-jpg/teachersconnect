@@ -114,9 +114,17 @@ Single-page admin app. Password stored in `sessionStorage` after login and sent 
 
 ### Events grid
 
-Event cards are rendered dynamically by JS into `#events-grid-container` on both `index.html` and `events.html`. The grid uses `.events-grid` CSS class:
+Event cards are rendered dynamically by JS into `#events-grid-container`.
+
+**`index.html`** uses the vertical card grid (`.events-grid` CSS class):
 - `grid-template-columns: repeat(auto-fit, minmax(300px, 380px))` with `justify-content: center`
 - Cards show "From £X.XX" when an event has multiple ticket types at different prices
+
+**`events.html` — "Summer Series" layout (redesigned).** Events render as full-width horizontal rows (`.events-stack` > `.event-row`), a 3-column grid (image | details | ticket options) that stacks on screens ≤900px. The hero is a cream-background "SUMMER SERIES 2026" / "Connect. Unwind. Have Fun. ♡" block (`.summer-hero`), and a "Join the Community" banner (`.community-banner`) sits below the events. Key details:
+- **Per-card theming cycles by event order** via the `CARD_THEMES` array (green → red → gold → teal → purple). The Nth active event returned by `get-events` gets the Nth theme: this drives the title color, the circular emoji badge, the ticket-option tint, the price color, and the "Get Tickets" button. **The CMS does not store a color/emoji per event — order determines it.** To change which event gets which color/icon, reorder events or edit `CARD_THEMES`.
+- Each row shows date (long form), location, and time (icons), the description, and a read-only **ticket-option preview** box per `ticket_type` (or a single "Ticket" box for single-price events). Actual ticket-type selection still happens in the checkout modal.
+- **The checkout/payment path is unchanged** — the "Get Tickets" button still calls `openCheckout(ev.id)`, and the modal, Stripe Elements, `create-payment-intent`, and `stripe-webhook` flow are untouched. The redesign is presentation-only.
+- `formatDate()` now also returns `dateLong` and `time` (both `timeZone: 'UTC'`) for the row meta lines; `full` is retained for the modal summary.
 
 ### Netlify Forms
 
