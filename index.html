@@ -2124,6 +2124,15 @@
             };
         }
 
+        // Show only the short blurb on cards: drop the [[TIME:...]] marker and
+        // anything after the [[DETAILS]] delimiter (matches the events page).
+        function cardBlurb(desc) {
+            var text = String(desc || '').replace(/\[\[TIME:[^\]]*\]\]/, '');
+            var idx = text.indexOf('[[DETAILS]]');
+            if (idx !== -1) text = text.slice(0, idx);
+            return text.trim();
+        }
+
         function renderEventCard(ev) {
             var remaining = ev.capacity - ev.tickets_sold;
             var soldOut = remaining <= 0;
@@ -2161,7 +2170,7 @@
                             '<span class="date-month">' + date.month + '</span>' +
                         '</div>' +
                         '<div class="card-title">' + escHtml(ev.name) + '</div>' +
-                        '<div class="card-excerpt">' + escHtml(ev.description || ev.location) + '</div>' +
+                        '<div class="card-excerpt">' + escHtml(cardBlurb(ev.description) || ev.location) + '</div>' +
                         '<div class="card-footer">' +
                             '<span class="card-location">' + escHtml(ev.location) + '</span>' +
                             availBadge +
