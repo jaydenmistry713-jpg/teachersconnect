@@ -92,9 +92,9 @@ Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-
 
 ### Ticket purchase flow
 
-1. Homepage fetches `get-events?featured=true` → renders featured event cards only
-2. `events.html` fetches `get-events` (no filter) → renders all active events
-3. User clicks "Buy Tickets" → checkout modal opens
+1. Homepage (`index.html`) fetches `get-events?featured=true` → renders featured cards; each card's CTA is **"View Details"** linking to `events.html?event=<id>` (the homepage no longer opens checkout itself)
+2. `events.html` fetches `get-events` (no filter) → renders all active events; if loaded with `?event=<id>` it auto-opens that event's details modal
+3. User clicks **"Get Tickets"** (on an events-page card or inside the details modal) → checkout modal opens
 4. If event has ticket types: step 0 shows type selector (auto-selects first available)
 5. Step 1: name, email, phone, quantity → POST to `create-payment-intent` (with optional `ticket_type_id`) → returns Stripe `client_secret`
 6. Step 2: Stripe Payment Element mounts → user pays
@@ -105,7 +105,7 @@ Bucket name: **`event-images`** (public). Images are uploaded via `admin-upload-
 ### Admin panel — `/admin/index.html`
 
 Single-page admin app. Password stored in `sessionStorage` after login and sent as `x-admin-password` header on every API call. Two tabs:
-- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/time, image upload, location, description, price, capacity, active toggle, show-availability toggle, featured toggle, ticket types section (add/remove rows with name/price/capacity). Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event.
+- **Events** — stats row, create/edit/delete events via modal form. Event form fields: name, date/start time, end time (optional — drives the displayed time range via the `[[TIME:...]]` description marker; see the events-grid notes), image upload, location, description, price, capacity, active toggle, show-availability toggle, featured toggle, ticket types section (add/remove rows with name/price/capacity). Each event row has a **Guest List** button that downloads a CSV of paid tickets for that event.
 - **Tickets** — filterable by event, full CSV export of all tickets
 
 **Image upload flow in admin**: selecting a file shows an instant preview. On form submit, the file is read as base64 and POSTed to `admin-upload-image` before the event is saved.
@@ -152,7 +152,7 @@ Domain `theteachersconnect.com` is verified in Resend. Two emails sent from `str
 
 `RESEND_FROM_EMAIL` is set to `edwin@theteachersconnect.com` in Netlify env vars.
 
-**Timezone**: event dates in emails are formatted with `timeZone: 'UTC'`.
+**Timezone & time range**: email dates use `timeZone: 'UTC'`. The date line shows the `[[TIME:...]]` range parsed from the event description when present, otherwise the stored start time.
 
 ## Environment variables
 
