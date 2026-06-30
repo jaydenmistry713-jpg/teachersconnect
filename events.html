@@ -485,6 +485,61 @@
         }
         .community-banner-btn:hover { filter: brightness(1.12); transform: translateY(-2px); }
 
+        /* View-details link on event rows */
+        .event-row-details-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: none; border: none; padding: 4px 0; margin-top: 4px;
+            font-family: var(--font-body); font-size: 13px; font-weight: 700;
+            cursor: pointer; align-self: flex-start;
+            transition: gap var(--duration-normal);
+        }
+        .event-row-details-btn:hover { gap: 9px; }
+
+        /* ==================== EVENT DETAILS MODAL ==================== */
+        .details-backdrop {
+            position: fixed; inset: 0; z-index: 9500;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .details-backdrop.open { display: flex; }
+        .details-modal {
+            background: var(--white); border-radius: var(--radius-2xl);
+            width: 100%; max-width: 560px; max-height: 88vh;
+            overflow-y: auto; box-shadow: var(--shadow-2xl); position: relative;
+        }
+        .details-header {
+            position: sticky; top: 0; background: var(--white); z-index: 1;
+            padding: 24px 26px 18px; border-bottom: 1px solid var(--gray-100);
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+        }
+        .details-header h2 { font-size: 21px; font-weight: 800; line-height: 1.2; }
+        .details-meta { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+        .details-meta-item { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--gray-600); font-weight: 500; }
+        .details-meta-item svg { flex-shrink: 0; color: var(--gray-400); }
+        .details-close {
+            width: 32px; height: 32px; border: none; background: var(--gray-100);
+            border-radius: 8px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; color: var(--gray-600); flex-shrink: 0;
+            transition: background var(--duration-normal);
+        }
+        .details-close:hover { background: var(--gray-200); }
+        .details-body { padding: 22px 26px 8px; }
+        .details-p { font-size: 14.5px; line-height: 1.7; color: var(--gray-600); margin-bottom: 14px; }
+        .details-h { font-size: 14px; font-weight: 700; color: var(--gray-900); margin: 20px 0 8px; }
+        .details-list { margin: 0 0 14px; padding: 0; }
+        .details-list li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.6; color: var(--gray-600); margin-bottom: 6px; }
+        .details-list li::before { content: '•'; position: absolute; left: 4px; font-weight: 700; color: var(--bullet, var(--primary-500)); }
+        .details-footer { position: sticky; bottom: 0; background: var(--white); padding: 16px 26px 24px; border-top: 1px solid var(--gray-100); }
+        .details-get {
+            width: 100%; padding: 14px; border: none; border-radius: var(--radius-full);
+            color: var(--white); font-family: var(--font-body); font-size: 14px; font-weight: 700;
+            letter-spacing: 0.03em; text-transform: uppercase; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: filter var(--duration-normal), transform var(--duration-normal);
+        }
+        .details-get:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
+        .details-get:disabled { background: var(--gray-300) !important; color: var(--gray-500); cursor: not-allowed; }
+
         @media (max-width: 900px) {
             .event-row { grid-template-columns: 1fr; }
             .event-row-media { min-height: 200px; aspect-ratio: 16/10; }
@@ -875,6 +930,25 @@
         </div>
     </footer>
 
+    <!-- ==================== EVENT DETAILS MODAL ==================== -->
+    <div class="details-backdrop" id="detailsBackdrop">
+        <div class="details-modal" id="detailsModal">
+            <div class="details-header">
+                <div>
+                    <h2 id="details-title"></h2>
+                    <div class="details-meta" id="details-meta"></div>
+                </div>
+                <button class="details-close" id="detailsClose" aria-label="Close">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="details-body" id="details-body"></div>
+            <div class="details-footer">
+                <button class="details-get" id="details-get-btn"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== CHECKOUT MODAL ==================== -->
     <div class="checkout-backdrop" id="checkoutBackdrop">
         <div class="checkout-modal" id="checkoutModal">
@@ -1091,7 +1165,13 @@
                 '</div>';
             }
 
-            var descHtml = ev.description ? '<p class="event-row-desc">' + escHtml(ev.description) + '</p>' : '';
+            // Description may carry a "[[DETAILS]]" delimiter: text before it is the
+            // short card blurb; text after it is the full write-up shown in the modal.
+            var parsed = splitDescription(ev.description);
+            var descHtml = parsed.blurb ? '<p class="event-row-desc">' + escHtml(parsed.blurb) + '</p>' : '';
+            var detailsBtn = parsed.full
+                ? '<button class="event-row-details-btn" style="color:' + theme.color + ';" onclick="openDetails(\'' + ev.id + '\')">View full details ' + ICON_ARROW + '</button>'
+                : '';
 
             return '<div class="event-row" data-animate="fade-up">' +
                 '<div class="event-row-media">' + mediaInner +
@@ -1105,6 +1185,7 @@
                         '<div class="event-row-meta-item">' + ICON_CLOCK + '<span>' + date.time + '</span></div>' +
                     '</div>' +
                     descHtml +
+                    detailsBtn +
                 '</div>' +
                 '<div class="event-row-tickets">' +
                     '<div class="event-row-tickets-label">Ticket Options</div>' +
@@ -1116,6 +1197,92 @@
                 '</div>' +
             '</div>';
         }
+
+        // Split a description into the short card blurb and the full details body.
+        function splitDescription(desc) {
+            var text = String(desc || '');
+            var idx = text.indexOf('[[DETAILS]]');
+            if (idx === -1) return { blurb: text.trim(), full: '' };
+            return { blurb: text.slice(0, idx).trim(), full: text.slice(idx + 11).trim() };
+        }
+
+        // Turn the plain-text details body into formatted HTML.
+        // Lines ending in ":" become subheadings; lines starting with • * ● - become bullets.
+        function renderDetailsBody(text) {
+            var lines = text.split('\n');
+            var html = '';
+            var inList = false;
+            function closeList() { if (inList) { html += '</ul>'; inList = false; } }
+            lines.forEach(function(raw) {
+                var line = raw.trim();
+                if (!line) { closeList(); return; }
+                if (/^[\*•●\-]\s+/.test(line)) {
+                    if (!inList) { html += '<ul class="details-list">'; inList = true; }
+                    html += '<li style="--bullet:' + (detailsTheme ? detailsTheme.color : 'var(--primary-500)') + ';">' +
+                        escHtml(line.replace(/^[\*•●\-]\s+/, '')) + '</li>';
+                } else {
+                    closeList();
+                    if (/:$/.test(line) && line.length < 64) {
+                        html += '<h4 class="details-h">' + escHtml(line) + '</h4>';
+                    } else {
+                        html += '<p class="details-p">' + escHtml(line) + '</p>';
+                    }
+                }
+            });
+            closeList();
+            return html;
+        }
+
+        var detailsTheme = null;
+        var detailsEventId = null;
+
+        function openDetails(eventId) {
+            var idx = loadedEvents.findIndex(function(e) { return e.id === eventId; });
+            if (idx === -1) return;
+            var ev = loadedEvents[idx];
+            var theme = CARD_THEMES[idx % CARD_THEMES.length];
+            detailsTheme = theme;
+            detailsEventId = eventId;
+            var date = formatDate(ev.date);
+            var parsed = splitDescription(ev.description);
+
+            document.getElementById('details-title').textContent = ev.name;
+            document.getElementById('details-title').style.color = theme.color;
+            document.getElementById('details-meta').innerHTML =
+                '<div class="details-meta-item">' + ICON_CAL + '<span>' + date.dateLong + '</span></div>' +
+                '<div class="details-meta-item">' + ICON_PIN + '<span>' + escHtml(ev.location) + '</span></div>' +
+                '<div class="details-meta-item">' + ICON_CLOCK + '<span>' + date.time + '</span></div>';
+            document.getElementById('details-body').innerHTML = renderDetailsBody(parsed.full || parsed.blurb);
+
+            var hasTypes = ev.ticket_types && ev.ticket_types.length > 0;
+            var soldOut = hasTypes
+                ? ev.ticket_types.every(function(t) { return (t.capacity - t.tickets_sold) <= 0; })
+                : (ev.capacity - ev.tickets_sold) <= 0;
+            var getBtn = document.getElementById('details-get-btn');
+            getBtn.style.background = theme.color;
+            getBtn.disabled = soldOut;
+            getBtn.innerHTML = soldOut ? 'Sold Out' : 'Get Tickets ' + ICON_ARROW;
+
+            document.getElementById('detailsBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('detailsModal').scrollTop = 0;
+        }
+
+        function closeDetails() {
+            document.getElementById('detailsBackdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('detailsClose').addEventListener('click', closeDetails);
+        document.getElementById('detailsBackdrop').addEventListener('click', function(e) {
+            if (e.target === this) closeDetails();
+        });
+        document.getElementById('details-get-btn').addEventListener('click', function() {
+            if (this.disabled) return;
+            var id = detailsEventId;
+            closeDetails();
+            openCheckout(id);
+        });
 
         function renderEvents(events) {
             var container = document.getElementById('events-grid-container');
