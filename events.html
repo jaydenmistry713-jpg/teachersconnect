@@ -409,9 +409,12 @@
             margin-bottom: var(--space-xl);
         }
         .summer-intro {
-            font-size: clamp(15px, 2vw, 18px); line-height: 1.75;
-            color: var(--gray-600); max-width: 540px; margin: 0 auto;
+            font-size: clamp(15px, 1.6vw, 17px); line-height: 1.75;
+            color: var(--gray-600); max-width: 660px; margin: 0 auto;
         }
+        .summer-intro p { margin: 0 0 var(--space-md); }
+        .summer-intro p:last-child { margin-bottom: 0; }
+        .summer-intro-lead { font-weight: 700; color: #2F5E26; font-size: clamp(16px, 1.8vw, 19px); }
 
         /* ==================== EVENT ROWS (Summer Series) ==================== */
         .events-stack { display: flex; flex-direction: column; gap: var(--space-xl); max-width: 1080px; margin: 0 auto; }
@@ -768,9 +771,13 @@
                 </div>
                 <h1 class="summer-title" data-animate="fade-up" data-delay="0.1">Summer Series 2026</h1>
                 <p class="summer-subtitle" data-animate="fade-up" data-delay="0.15">Connect. Unwind. Have Fun. ♡</p>
-                <p class="summer-intro" data-animate="fade-up" data-delay="0.2">
-                    Three unforgettable events. One amazing community. Join us this summer for exciting experiences, good vibes and even better company.
-                </p>
+                <div class="summer-intro" data-animate="fade-up" data-delay="0.2">
+                    <p class="summer-intro-lead">Three unforgettable events. One incredible summer.</p>
+                    <p>This summer, we're inviting educators from across the UK to step away from the classroom and experience something different.</p>
+                    <p>Whether you're looking to challenge yourself, celebrate a special milestone, or simply enjoy a fun day with like-minded people, our Teachers Connect Summer Series has something for everyone.</p>
+                    <p>Across three unique events, you'll have the opportunity to connect with educators from all backgrounds, create lasting memories, and be part of a community that believes teachers deserve opportunities to unwind, socialise, and enjoy life outside of school.</p>
+                    <p>This year is even more special as we celebrate 2 years of Teachers Connect, and we can't wait to celebrate this milestone with you.</p>
+                </div>
             </div>
         </section>
 
