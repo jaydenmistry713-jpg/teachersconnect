@@ -1233,7 +1233,7 @@
                 : rem <= 0;
 
             var mediaInner = ev.image_url
-                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '">'
+                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '"' + (idx === 0 ? '' : ' loading="lazy"') + '>'
                 : '<div class="media-placeholder" style="background:linear-gradient(135deg,' + theme.color + ',rgba(0,0,0,0.45));"></div>';
 
             // Ticket option preview boxes (selection still happens in the checkout modal)

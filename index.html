@@ -2136,7 +2136,7 @@
             return text.trim();
         }
 
-        function renderEventCard(ev) {
+        function renderEventCard(ev, idx) {
             var remaining = ev.capacity - ev.tickets_sold;
             var soldOut = remaining <= 0;
             var date = formatDate(ev.date);
@@ -2152,7 +2152,7 @@
             var btnLabel = soldOut ? 'Sold Out' : 'Buy Tickets — ' + priceLabel;
 
             var imageHtml = ev.image_url
-                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">'
+                ? '<img src="' + escHtml(ev.image_url) + '" alt="' + escHtml(ev.name) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"' + (idx === 0 ? '' : ' loading="lazy"') + '>'
                 : '<div class="card-image-bg" style="position:absolute;inset:0;background:linear-gradient(135deg,var(--primary-500),var(--primary-700));"></div>';
 
             var availBadge = '';
@@ -2195,7 +2195,7 @@
                 return;
             }
             var grid = '<div class="events-grid">';
-            events.forEach(function(ev) { grid += renderEventCard(ev); });
+            events.forEach(function(ev, i) { grid += renderEventCard(ev, i); });
             grid += '</div>';
             container.innerHTML = grid;
 
